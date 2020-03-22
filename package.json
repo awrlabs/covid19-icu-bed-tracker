@@ -1,0 +1,22 @@
+{
+  "name": "icu-bed-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "scripts": {
+    "build": "d2-app-scripts build",
+    "start": "d2-app-scripts start",
+    "test": "d2-app-scripts test"
+  },
+  "devDependencies": {
+    "@dhis2/cli-app-scripts": "^3.2.7"
+  },
+  "dependencies": {
+    "@dhis2/app-runtime": "^2.1.0",
+    "@reduxjs/toolkit": "^1.2.5",
+    "react-redux": "^7.2.0",
+    "react-treebeard": "^3.2.4",
+    "redux": "^4.0.5"
+  }
+}
