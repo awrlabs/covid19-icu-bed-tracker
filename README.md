@@ -17,7 +17,14 @@ To keep it simple follow these stepsm
 `App.js` - holds the main views for now
 `store` - contain App state related things, managed with Redux on Redux Toolkit
 
+### Running the project
+
+- use `yarn install` and then `yarn start`
+- If using chrome, make sure to **disable** `SameSite by default cookies` from (chrome://flags/#same-site-by-default-cookies)[chrome://flags/#same-site-by-default-cookies] 
+- When the dev server starts, it would ask for server, username and password (these will be available at the slack fo security reasons)
+
 ### Other
 
 - Try to use [dhis2 design guidelines](https://github.com/dhis2/design-system) and [ui-core](https://github.com/dhis2/ui-core/tree/master/src) components as much as possible
 - Will keep all external styles in `App.css` for now 
+- Use yarn
