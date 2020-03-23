@@ -248,9 +248,9 @@ function MyApp(){
                         <OrgUnits />
                     </div>
                     <div className="right-column">
-                        <ViewOrgICU />
+                        {/* <ViewOrgICU /> */}
                         {/* <ViewICUBeds /> */}
-                        {/* <ViewConfigureBeds /> */}
+                        <ViewConfigureBeds />
                     </div>
                 </div>
             </ContainerView>
