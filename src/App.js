@@ -68,6 +68,7 @@ function ViewOrgICU(){
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
+                            data={bedData}
                         />
                     </div>
                 </div>
@@ -247,9 +248,9 @@ function MyApp(){
                         <OrgUnits />
                     </div>
                     <div className="right-column">
-                        {/* <ViewOrgICU /> */}
+                        <ViewOrgICU />
                         {/* <ViewICUBeds /> */}
-                        <ViewConfigureBeds />
+                        {/* <ViewConfigureBeds /> */}
                     </div>
                 </div>
             </ContainerView>
