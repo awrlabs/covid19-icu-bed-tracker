@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react'
-import { Provider, useSelector } from 'react-redux';
-import { DataQuery } from '@dhis2/app-runtime'
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import { DataQuery, useDataQuery, useDataEngine } from '@dhis2/app-runtime'
 import i18n from '@dhis2/d2-i18n'
 import OrgUnits from './components/OrgUnits'
 import './App.css';
-import { Card, MultiSelect, MultiSelectOption, MultiSelectField } from '@dhis2/ui-core';
+import { Card, MultiSelect, MultiSelectOption, MultiSelectField, Button, ButtonStrip, 
+         Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,
+} from '@dhis2/ui-core';
 import ICUTable from './components/ICUTable';
 import * as api from "./mockapi";
-import { store } from './state/store';
+import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
-
-const query = {
-    me: {
-        resource: 'me',
-    },
-}
+import ConfigureBedModal from './components/ConfigureBedModal';
+import { setActiveICU, setMetaData } from './state/appState';
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+import { getICUBeds } from './state/apiActions';
 
 function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
@@ -83,7 +83,10 @@ function ViewICUBeds(){
 
     return (
         <>
-            <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
+            <div className="inner-header">
+                <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
+                <Button className="pull-right">Configure Beds</Button>
+            </div>
             <div className="icu-bed-container">
                 {beds.map((bed, key) => (
                     <ICUBed 
@@ -97,18 +100,151 @@ function ViewICUBeds(){
     )
 }
 
+function ViewConfigureBeds(){
+    const [bedModalOpen, setBedModalOpen] = useState(false);
+    const dispatch = useDispatch();
+
+    const activeICU = useSelector(state => state.app.activeICU);
+    const [selectedBed, setSelectedBed] = useState(null);
+
+    useEffect(() => {
+        dispatch(getICUBeds(activeICU.id));
+    }, []);
+
+    const getAttributeByName = (bed, name) => {
+        for(var attrib of bed.attributes){
+            if(attrib.displayName === name){
+                return attrib.value; 
+            }
+        }
+        return "";
+    }
+
+    const onAddBed = () => {
+        setSelectedBed(null);
+        setBedModalOpen(true);
+    }
+
+    const onSelectBed = (bed) => {
+        setSelectedBed(bed);
+        setBedModalOpen(true);
+    }
+
+    return (
+        <>
+            <div className="inner-header">
+                <ButtonStrip end>
+                    <Button>Back</Button>
+                    <Button primary onClick={onAddBed}>Add New Bed</Button>
+                </ButtonStrip>
+            </div>
+            <div className="inner-container">
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCellHead>Bed No</TableCellHead>  
+                            <TableCellHead>Bed Type</TableCellHead>
+                            <TableCellHead>Covid Type</TableCellHead> 
+                            <TableCellHead>Action</TableCellHead> 
+                        </TableRow>
+                    </TableHead>
+                    {activeICU && 
+                        <TableBody>
+                            {activeICU.beds.map((bed, key) => (
+                                <TableRow key={key}>
+                                    <TableCell>{getAttributeByName(bed, "ICU - Bed Number")}</TableCell>
+                                    <TableCell>{getAttributeByName(bed, "ICU - Type")}</TableCell>
+                                    <TableCell>{getAttributeByName(bed, "ICU - COVID Type")}</TableCell>
+                                    <TableCell>
+                                        <ButtonStrip>
+                                            <Button onClick={() => onSelectBed(bed)}>View Details</Button>
+                                            <Button destructive>Remove</Button>
+                                        </ButtonStrip>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    }
+                </Table>
+            </div>
+            {bedModalOpen && 
+                <ConfigureBedModal 
+                    open={bedModalOpen}
+                    onClose={() => setBedModalOpen(false)}
+                    selectedBed={selectedBed}
+                />
+            }
+        </>
+    )
+}
+
+function ContainerView({children}){
+    const query = {
+        metaData: {
+            resource: 'programs/C1wTfmmMQUn',
+            params: {
+                fields: "id,name,trackedEntityType[id, displayName, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, valueType, optionSet[options[displayName, id, code]]]]]"
+            },
+        }
+    }
+    const { loading, error, data, refetch } = useDataQuery(query);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if(data){
+            let _metaData = {
+                id: data.metaData.id,
+                name: data.metaData.name,
+                trackedEntityType: {
+                    id: data.metaData.trackedEntityType.id,
+                    displayName: data.metaData.trackedEntityType.displayName,
+                    trackedEntityTypeAttributes: []
+                }
+            };
+
+            for(var attrib of data.metaData.trackedEntityType.trackedEntityTypeAttributes){
+                _metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
+            }
+
+            dispatch(setMetaData(_metaData));
+        }
+    }, [loading]);
+
+    return (
+        <div style={{height:"100vh"}}>
+            {children}
+        </div>
+    )
+}
+
 function MyApp(){
+    const dhisEngine = useDataEngine();
+    
+    const customizedMiddleware = getDefaultMiddleware({
+        thunk: {
+            extraArgument: dhisEngine
+        }
+    })
+
+    const store = configureStore({
+        reducer: rootReducer,
+        middleware: customizedMiddleware
+    })
+    
     return (
         <Provider store={store}>
-            <div className="container">
-                <div className="left-column">
-                    <OrgUnits />
+            <ContainerView>
+                <div className="container">
+                    <div className="left-column">
+                        <OrgUnits />
+                    </div>
+                    <div className="right-column">
+                        {/* <ViewOrgICU /> */}
+                        {/* <ViewICUBeds /> */}
+                        <ViewConfigureBeds />
+                    </div>
                 </div>
-                <div className="right-column">
-                    <ViewOrgICU />
-                    {/* <ViewICUBeds /> */}
-                </div>
-            </div>
+            </ContainerView>
         </Provider>
     )
 }

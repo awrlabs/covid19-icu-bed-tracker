@@ -1,7 +1,7 @@
-import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { configureStore, combineReducers, getDefaultMiddleware } from "@reduxjs/toolkit";
 import appReducer from './appState';
 
-const rootReducer = combineReducers({
+export const rootReducer = combineReducers({
     app: appReducer
 })
 

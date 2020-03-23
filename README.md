@@ -28,3 +28,27 @@ To keep it simple follow these stepsm
 - Try to use [dhis2 design guidelines](https://github.com/dhis2/design-system) and [ui-core](https://github.com/dhis2/ui-core/tree/master/src) components as much as possible
 - Will keep all external styles in `App.css` for now 
 - Use yarn
+
+
+http://43.224.124.234:7080/api/33/programs/C1wTfmmMQUn
+http://43.224.124.234:7080/api/33/trackedEntityTypes/VusKORm3ZGL
+
+"organisationUnits": [
+        {
+            "id": "E5zYQKaJmpI"
+        },
+        {
+            "id": "ReDTgmQVgfM"
+        },
+        {
+            "id": "LZU2dcf423d"
+        },
+        {
+            "id": "WrF3YBvQ7dy"
+        }
+    ],
+
+
+sEunXjlR79d - NHSL - National Hospital of Sri Lanka
+medical - LZU2dcf423d
+surgical - WrF3YBvQ7dy
