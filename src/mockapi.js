@@ -29,6 +29,9 @@ export function getICUByOrgUnit(orgunitId){
 
 export function getICUBeds(num){
     const statuses = ["AVAILABLE", "OCCUPIED", "RESERVED", "INPREP"];
+    const categories = ["one", "two"];
+    const types = ["medical", "surgery"];
+
     let beds = [];
     let rand = 0;
     for(var i=1;i<=num;i++){
@@ -36,8 +39,19 @@ export function getICUBeds(num){
 
         beds.push({
             name: "A" + i,
-            status: statuses[Math.floor(Math.random() * statuses.length)]
+            status: statuses[Math.floor(Math.random() * statuses.length)],
+            category: categories[Math.floor(Math.random() * categories.length)],
+            type: types[Math.floor(Math.random() * types.length)],
         })
     }
     return beds;
+}
+
+export function getICU(){
+    const icu = {
+        id: "LZU2dcf423d",
+        name: "Colombo ICU",
+        beds: getICUBeds(10)
+    };
+    return icu;
 }
