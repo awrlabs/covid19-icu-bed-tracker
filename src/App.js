@@ -15,6 +15,7 @@ import ConfigureBedModal from './components/ConfigureBedModal';
 import { setActiveICU, setMetaData } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds } from './state/apiActions';
+import ICUMap from './components/ICUMap'
 
 function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
@@ -58,10 +59,17 @@ function ViewOrgICU(){
                         </MultiSelect>
                     
                 </div>
-                <div className="icu-table">
-                    <ICUTable 
-                        data={bedData}
-                    />
+                <div className="icu-org">
+                    <div className="icu-table">
+                        <ICUTable 
+                            data={bedData}
+                        />
+                    </div>
+                    <div className="icu-map">
+                        <ICUMap
+                            onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
+                        />
+                    </div>
                 </div>
             </>
         )
@@ -239,9 +247,9 @@ function MyApp(){
                         <OrgUnits />
                     </div>
                     <div className="right-column">
-                        {/* <ViewOrgICU /> */}
+                        <ViewOrgICU />
                         {/* <ViewICUBeds /> */}
-                        <ViewConfigureBeds />
+                        {/* <ViewConfigureBeds /> */}
                     </div>
                 </div>
             </ContainerView>
