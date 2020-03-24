@@ -4,6 +4,8 @@ import {
         TableRow, TableCellHead, TableCell,
         Button, DropdownButton
     } from '@dhis2/ui-core';
+import { useDispatch } from 'react-redux';
+import { getICUStat } from '../state/apiActions';
 
 
 function sortData(field, data, state){
@@ -32,11 +34,13 @@ function sortData(field, data, state){
     setSortOrder(sortOrder*-1)
 }
 
-export default function ICUTable({ data }){
+export default function ICUTable({ data, onSelectICU, filters }){
 
     const [locationData, setLocationData] = useState([])
     const [sortedBy, setSortedBy] = useState('distance')
     const [sortOrder, setSortOrder] = useState(1)
+
+    const dispatch = useDispatch();
 
     const stateData = {
         setLocationData,
@@ -47,8 +51,17 @@ export default function ICUTable({ data }){
     }
 
     useEffect(()=>{
-        sortData(sortedBy, data, stateData)
+        sortData(sortedBy, data, stateData);
     },[data])
+
+    const getOrResolveICUStat = (icu) => {
+        if(icu.total === null){
+            dispatch(getICUStat(icu, filters));
+            return "Updating....";
+        }
+
+        return icu.total;
+    }
 
     if(!data){ return <div></div> }
 
@@ -94,9 +107,9 @@ export default function ICUTable({ data }){
             <TableBody>
                 {locationData.map((loc, key) => (
                 <TableRow key={key}>
-                    <TableCell>{loc.name}</TableCell>
+                    <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name}</a></TableCell>
                     <TableCell>{loc.distance}</TableCell>
-                    <TableCell>{loc.total}</TableCell>
+                    <TableCell>{ getOrResolveICUStat(loc) }</TableCell>
                     <TableCell>{loc.available}</TableCell>
                     <TableCell>
                         <p>Dr. John Doe</p>

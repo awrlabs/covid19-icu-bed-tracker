@@ -1,4 +1,4 @@
-import { setICUBeds, setMetaData, updateBedStatus } from './appState';
+import { setICUBeds, setMetaData, updateBedStatus, updateICUStat } from './appState';
 import * as moment from 'moment';
 
 const ICU_EVENT = "ICU - Bed Event";
@@ -29,6 +29,23 @@ function bedEventHelper(metaData, eventType){
     }
 
     return dataValue;
+}
+
+function getEventStatus(event){
+    if(event.dataValues.length > 0){
+        switch(event.dataValues[0].value){
+            case "Discharged":
+                return "AVAILABLE";
+            
+            case "Admitted":
+                return "OCCUPIED";
+            
+            case "Reserved":
+                return "RESERVED";
+        }
+    }
+
+    return "";
 }
 
 export function getMetaData(){
@@ -130,7 +147,8 @@ export function getBedStatus(instanceId){
                 resource: 'events',
                 params: {
                     trackedEntityInstance: instanceId,
-                    paging: "false"
+                    paging: "false",
+                    status: "ACTIVE"
                 }
             }
         }
@@ -162,7 +180,8 @@ export function getBedStatus(instanceId){
 
             dispatch(updateBedStatus({
                 bedId: instanceId,
-                status: status
+                status: status,
+                lastEvent: lastEvent
             }))
         }
     }
@@ -240,6 +259,38 @@ export function removeBed(icuId, enrollmentId){
 export function addBedEvent(teId, programId, programStageId, icuId, eventType, additionalData=[]){
     return async (dispatch, getState, dhisEngine) => {
         try{
+            // first we complete last event
+            const query  = {
+                events: {
+                    resource: 'events',
+                    params: {
+                        trackedEntityInstance: teId,
+                        paging: "false",
+                        status: "ACTIVE"
+                    }
+                }
+            }
+            const eventResponse = await dhisEngine.query(query);
+            if(eventResponse.events.events.length > 0){
+                const lastEvent = eventResponse.events.events[0];
+                const updatePayload = {
+                    "event": lastEvent.event,
+                    "trackedEntityInstance": teId,
+                    "program": programId,
+                    "programStage": programStageId,
+                    "enrollment": icuId,
+                    "orgUnit": icuId,
+                    "completedDate": moment().format("YYYY-MM-DD"),
+                    "status": "COMPLETED"
+                };
+                const updateMutation = {
+                    resource: 'events',
+                    type: 'create',
+                    data: updatePayload
+                };
+                await dhisEngine.mutate(updateMutation);
+            }
+
             const dataValues = [
                 bedEventHelper(getState().app.metaData.dataElements, eventType),
                 ...additionalData
@@ -251,7 +302,8 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                 "enrollment": icuId,
                 "orgUnit": icuId,
                 "dataValues": dataValues,
-                "status": "COMPLETED"
+                "eventDate": moment().format("YYYY-MM-DD"),
+                "status": "ACTIVE"
             };
             const mutation = {
                 resource: 'events',
@@ -260,6 +312,68 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
             };
             const response = await dhisEngine.mutate(mutation);
             dispatch(getBedStatus(teId));
+        }catch(error){
+            console.log("Error in creating:", error)
+        }
+    }
+}
+
+export function getICUStat(icu, filters = { }){
+    return async (dispatch, getState, dhisEngine) => {
+        try{
+            let filtersQuery = "";
+            for(var filter in filters){
+                filtersQuery += `${filter}:IN:${filters[filter].join(";")},`
+            }
+            filtersQuery = filtersQuery.substr(0, filtersQuery.length - 1);
+            console.log(filtersQuery);
+            // first we complete last event
+            const query  = {
+                events: {
+                    resource: 'events',
+                    params: {
+                        orgUnit: icu.id,
+                        paging: "false",
+                        status: "ACTIVE"
+                    }
+                },
+                filteredTEI: {
+                    resource: 'trackedEntityInstances',
+                    params: {
+                        ou: icu.id,
+                        paging: 'false',
+                        fields: 'trackedEntityInstance',
+                        filter: filtersQuery
+                    }                    
+                }
+            }
+            const response = await dhisEngine.query(query);
+            let stat = {
+                available: 0,
+                total: 0
+            };
+
+            for(var event of response.events.events){
+                let teIndex = response.filteredTEI.trackedEntityInstances.findIndex(te => te.trackedEntityInstance === event.trackedEntityInstance);
+
+                if(teIndex === -1){
+                    // filtered TE doesn't have this
+                    continue;
+                }
+
+                let status = getEventStatus(event);
+
+                if(status === "AVAILABLE"){
+                    stat.available++;
+                }
+
+                stat.total++;
+            }
+
+            dispatch(updateICUStat({
+                icuId: icu.id,
+                stat: stat
+            }))
         }catch(error){
             console.log("Error in creating:", error)
         }

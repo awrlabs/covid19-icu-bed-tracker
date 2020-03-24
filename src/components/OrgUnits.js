@@ -105,10 +105,10 @@ export default function OrgUnits(){
         let icus = [];
         for(var icu of traverseResults){
             icus.push({
-                name: icu.name,
+                ...icu,
                 distance: 0,
-                total: 0,
-                available: 0
+                total: null,
+                available: null
             })
         }
         dispatch(updateFilteredICUList(icus));

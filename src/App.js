@@ -12,7 +12,7 @@ import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData } from './state/appState';
+import { setActiveICU, setMetaData, setActiveOrgUnit } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds, getMetaData, addBedEvent, removeBed } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
@@ -32,7 +32,8 @@ function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
     // const [bedData, setBedData] = useState([]);
-    
+    const dispatch = useDispatch();
+
     useEffect(() => {
         // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
@@ -50,20 +51,33 @@ function ViewOrgICU(){
         return <ViewICUBeds />
     }
 
+    const onSelectICU = (icu) => {
+        dispatch(setActiveOrgUnit({
+            id: icu.id,
+            name: icu.name,
+            level: icu.level
+        }));
+
+        dispatch(setActiveICU({
+            id: icu.id,
+            beds: []
+        }))
+    }
+
     const filterData = () => {
-        //filter logic
+        //filter logic 
         return bedData
     }
 
     return (
         activeOrgUnit.level < 6 && (
             <>
-                <span className="t20">Showing ICU Bed data for <b>{activeOrgUnit.name}</b></span>
+                <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
                         <MultiSelect 
                             selected={filters.XYNBoDZS0aV}  
                             placeholder="Bed Type" 
-                            onChange={({selected})=>{setFilters({XYNBoDZS0aV:selected})}}
+                            onChange={({selected})=>{setFilters({...filters, XYNBoDZS0aV:selected})}}
                         >
                             <MultiSelectOption value="General" label="General" />
                             <MultiSelectOption value="Medical" label="Medical" />
@@ -72,7 +86,7 @@ function ViewOrgICU(){
                         <MultiSelect 
                             selected={filters.Xt5tV6OFSEW} 
                             placeholder="COVID Type" 
-                            onChange={({selected})=>{setFilters({Xt5tV6OFSEW:selected})}}
+                            onChange={({selected})=>{setFilters({...filters, Xt5tV6OFSEW:selected})}}
                         >
                             <MultiSelectOption value="COVID" label="COVID"  />
                             <MultiSelectOption value="Non-COVID" label="Non-COVID" />
@@ -82,6 +96,7 @@ function ViewOrgICU(){
                     <div className="icu-table">
                         <ICUTable 
                             data={filterData()}
+                            onSelectICU={onSelectICU}
                         />
                     </div>
                     <div className="icu-map">
