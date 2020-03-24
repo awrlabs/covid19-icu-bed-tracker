@@ -4,25 +4,33 @@ export function getICUByOrgUnit(orgunitId){
             name: "Colombo ICU",
             distance: "10km",
             total: 100,
-            available: 50
+            available: 0,
+            lat: 6.9182,
+            lng: 79.86
         },
         {
             name: "Gampaha ICU",
             distance: "10km",
             total: 40,
-            available: 10
+            available: 10,
+            lat: 7.090,
+            lng: 80.000
         },
         {
             name: "Jaffna ICU",
             distance: "10km",
             total: 70,
-            available: 20
+            available: 20,
+            lat: 9.667,
+            lng: 80.02
         },
         {
             name: "Kandy ICU",
             distance: "10km",
             total: 10,
-            available: 5
+            available: 5,
+            lat: 7.80411,
+            lng: 80.64483
         }
     ]
 }

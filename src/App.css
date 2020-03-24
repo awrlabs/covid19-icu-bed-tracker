@@ -93,3 +93,15 @@
 .inner-container{
     margin-top: 30px;
 }
+
+.icu-org{
+    display: flex;
+}
+
+.icu-table{
+    width: 60%;
+}
+
+.icu-map{
+    width: 40%;
+}

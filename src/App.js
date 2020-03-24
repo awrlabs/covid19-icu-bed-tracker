@@ -17,6 +17,7 @@ import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds, getMetaData, addBedEvent, removeBed } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
+import ICUMap from './components/ICUMap'
 
 function getAttributeByName(bed, name){
     for(var attrib of bed.attributes){
@@ -70,10 +71,18 @@ function ViewOrgICU(){
                         </MultiSelect>
                     
                 </div>
-                <div className="icu-table">
-                    <ICUTable 
-                        data={bedData}
-                    />
+                <div className="icu-org">
+                    <div className="icu-table">
+                        <ICUTable 
+                            data={bedData}
+                        />
+                    </div>
+                    <div className="icu-map">
+                        <ICUMap
+                            onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
+                            data={bedData}
+                        />
+                    </div>
                 </div>
             </>
         )
