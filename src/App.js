@@ -52,7 +52,7 @@ function ViewOrgICU(){
     return (
         activeOrgUnit.level < 6 && (
             <>
-                <span className="t20">Showing ICU Bed data for <b>{activeOrgUnit.name}</b></span>
+                <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
                     
                         <MultiSelect placeholder="ICU Type" onChange={onBedTypeChange}>
