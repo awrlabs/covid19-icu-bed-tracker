@@ -33,9 +33,14 @@ const appSlice = createSlice({
         },
         updateFilteredICUList(state, action){
             state.icuList = action.payload;
+        },
+        updateICUStat(state, action){
+            const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
+            state.icuList[icuIndex].available = action.payload.stat.available;
+            state.icuList[icuIndex].total = action.payload.stat.total;
         }
     }
 })
 
-export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, updateBedStatus, updateFilteredICUList } = appSlice.actions;
+export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, updateBedStatus, updateFilteredICUList, updateICUStat } = appSlice.actions;
 export default appSlice.reducer;

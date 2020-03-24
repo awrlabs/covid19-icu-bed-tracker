@@ -12,7 +12,7 @@ import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData } from './state/appState';
+import { setActiveICU, setMetaData, setActiveOrgUnit } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds, getMetaData, addBedEvent, removeBed } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
@@ -32,7 +32,8 @@ function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
     // const [bedData, setBedData] = useState([]);
-    
+    const dispatch = useDispatch();
+
     useEffect(() => {
         // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
@@ -47,6 +48,19 @@ function ViewOrgICU(){
 
     if(activeOrgUnit.level === 6){
         return <ViewICUBeds />
+    }
+
+    const onSelectICU = (icu) => {
+        dispatch(setActiveOrgUnit({
+            id: icu.id,
+            name: icu.name,
+            level: icu.level
+        }));
+
+        dispatch(setActiveICU({
+            id: icu.id,
+            beds: []
+        }))
     }
 
     return (
@@ -75,6 +89,7 @@ function ViewOrgICU(){
                     <div className="icu-table">
                         <ICUTable 
                             data={bedData}
+                            onSelectICU={onSelectICU}
                         />
                     </div>
                     <div className="icu-map">
