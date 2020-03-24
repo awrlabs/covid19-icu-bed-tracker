@@ -36,9 +36,10 @@ function ViewOrgICU(){
     useEffect(() => {
         // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
+    
+    const [filters, setFilters] = useState({ 'XYNBoDZS0aV':[], 'Xt5tV6OFSEW':[]})
 
     const onBedTypeChange = () => {
-
     }
 
     if(!activeOrgUnit){
@@ -49,38 +50,44 @@ function ViewOrgICU(){
         return <ViewICUBeds />
     }
 
+    const filterData = () => {
+        //filter logic
+        return bedData
+    }
+
     return (
         activeOrgUnit.level < 6 && (
             <>
                 <span className="t20">Showing ICU Bed data for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
-                    
-                        <MultiSelect placeholder="ICU Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Medical" />
-                            <MultiSelectOption value="type01" label="Surgical" />
-                            <MultiSelectOption value="type01" label="Neurosurgical" />
-                            <MultiSelectOption value="type01" label="Pediatric" />
-                            <MultiSelectOption value="type01" label="Neonatal" />
-                            <MultiSelectOption value="type01" label="Other" />
+                        <MultiSelect 
+                            selected={filters.XYNBoDZS0aV}  
+                            placeholder="Bed Type" 
+                            onChange={({selected})=>{setFilters({XYNBoDZS0aV:selected})}}
+                        >
+                            <MultiSelectOption value="General" label="General" />
+                            <MultiSelectOption value="Medical" label="Medical" />
+                            <MultiSelectOption value="Surgical" label="Surgical" />
                         </MultiSelect>
-                        <MultiSelect placeholder="Bed Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Type 01"  onClick={onBedTypeChange} />
+                        <MultiSelect 
+                            selected={filters.Xt5tV6OFSEW} 
+                            placeholder="COVID Type" 
+                            onChange={({selected})=>{setFilters({Xt5tV6OFSEW:selected})}}
+                        >
+                            <MultiSelectOption value="COVID" label="COVID"  />
+                            <MultiSelectOption value="Non-COVID" label="Non-COVID" />
                         </MultiSelect>
-                        <MultiSelect placeholder="Diagnosis Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Type 01"  onClick={onBedTypeChange} />
-                        </MultiSelect>
-                    
                 </div>
                 <div className="icu-org">
                     <div className="icu-table">
                         <ICUTable 
-                            data={bedData}
+                            data={filterData()}
                         />
                     </div>
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
-                            data={bedData}
+                            data={filterData()}
                         />
                     </div>
                 </div>
