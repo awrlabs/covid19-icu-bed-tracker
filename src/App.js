@@ -29,8 +29,10 @@ function getAttributeByName(bed, name){
 }
 
 function ViewOrgICU(){
+
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
+    const metaData = useSelector(state => state.app.metaData);
     // const [bedData, setBedData] = useState([]);
     const dispatch = useDispatch();
 
@@ -38,7 +40,17 @@ function ViewOrgICU(){
         // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
     
-    const [filters, setFilters] = useState({ 'XYNBoDZS0aV':[], 'Xt5tV6OFSEW':[]})
+    const bedTypeId = 'XYNBoDZS0aV'
+    const covidTypeId = 'Xt5tV6OFSEW'
+    let bedTypeData = null
+    let covidTypeData = null
+    if(metaData){
+        bedTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === bedTypeId );
+        covidTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === covidTypeId );
+    }
+    const [filters, setFilters] = useState({ [bedTypeId]:[], [covidTypeId]:[]})
+
+    
 
     const onBedTypeChange = () => {
     }
@@ -75,21 +87,22 @@ function ViewOrgICU(){
                 <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
                         <MultiSelect 
-                            selected={filters.XYNBoDZS0aV}  
-                            placeholder="Bed Type" 
-                            onChange={({selected})=>{setFilters({...filters, XYNBoDZS0aV:selected})}}
+                            selected={filters[bedTypeId]}  
+                            placeholder={bedTypeData.displayName}
+                            onChange={({selected})=>{setFilters({...filters, [bedTypeId]:selected})}}
                         >
-                            <MultiSelectOption value="General" label="General" />
-                            <MultiSelectOption value="Medical" label="Medical" />
-                            <MultiSelectOption value="Surgical" label="Surgical" />
+                            {bedTypeData && bedTypeData.optionSet.options.map((option)=>(
+                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            ))}
                         </MultiSelect>
                         <MultiSelect 
-                            selected={filters.Xt5tV6OFSEW} 
-                            placeholder="COVID Type" 
-                            onChange={({selected})=>{setFilters({...filters, Xt5tV6OFSEW:selected})}}
+                            selected={filters[covidTypeId]} 
+                            placeholder={covidTypeData.displayName}
+                            onChange={({selected})=>{setFilters({...filters, [covidTypeId]:selected})}}
                         >
-                            <MultiSelectOption value="COVID" label="COVID"  />
-                            <MultiSelectOption value="Non-COVID" label="Non-COVID" />
+                            {covidTypeData && covidTypeData.optionSet.options.map((option)=>(
+                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            ))}
                         </MultiSelect>
                 </div>
                 <div className="icu-org">
