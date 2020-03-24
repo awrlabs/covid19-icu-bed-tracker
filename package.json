@@ -8,7 +8,7 @@
     "build": "d2-app-scripts build",
     "start": "d2-app-scripts start",
     "test": "d2-app-scripts test",
-    "predeploy": "d2-app-scripts build",
+    "predeploy": "d2-app-scripts build --standalone",
     "deploy": "gh-pages -d build"
   },
   "homepage": "http://manzzup.github.io/covid19-icu-bed-tracker",
