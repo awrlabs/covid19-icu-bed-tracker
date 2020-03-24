@@ -318,9 +318,15 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
     }
 }
 
-export function getICUStat(icu){
+export function getICUStat(icu, filters = { }){
     return async (dispatch, getState, dhisEngine) => {
         try{
+            let filtersQuery = "";
+            for(var filter in filters){
+                filtersQuery += `${filter}:IN:${filters[filter].join(";")},`
+            }
+            filtersQuery = filtersQuery.substr(0, filtersQuery.length - 1);
+            console.log(filtersQuery);
             // first we complete last event
             const query  = {
                 events: {
@@ -330,6 +336,15 @@ export function getICUStat(icu){
                         paging: "false",
                         status: "ACTIVE"
                     }
+                },
+                filteredTEI: {
+                    resource: 'trackedEntityInstances',
+                    params: {
+                        ou: icu.id,
+                        paging: 'false',
+                        fields: 'trackedEntityInstance',
+                        filter: filtersQuery
+                    }                    
                 }
             }
             const response = await dhisEngine.query(query);
@@ -339,6 +354,13 @@ export function getICUStat(icu){
             };
 
             for(var event of response.events.events){
+                let teIndex = response.filteredTEI.trackedEntityInstances.findIndex(te => te.trackedEntityInstance === event.trackedEntityInstance);
+
+                if(teIndex === -1){
+                    // filtered TE doesn't have this
+                    continue;
+                }
+
                 let status = getEventStatus(event);
 
                 if(status === "AVAILABLE"){

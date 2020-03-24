@@ -34,7 +34,7 @@ function sortData(field, data, state){
     setSortOrder(sortOrder*-1)
 }
 
-export default function ICUTable({ data, onSelectICU }){
+export default function ICUTable({ data, onSelectICU, filters }){
 
     const [locationData, setLocationData] = useState([])
     const [sortedBy, setSortedBy] = useState('distance')
@@ -56,7 +56,7 @@ export default function ICUTable({ data, onSelectICU }){
 
     const getOrResolveICUStat = (icu) => {
         if(icu.total === null){
-            dispatch(getICUStat(icu));
+            dispatch(getICUStat(icu, filters));
             return "Updating....";
         }
 
