@@ -48,7 +48,7 @@ export default function ICUTable({ data }){
 
     useEffect(()=>{
         sortData(sortedBy, data, stateData)
-    },[])
+    },[data])
 
     if(!data){ return <div></div> }
 

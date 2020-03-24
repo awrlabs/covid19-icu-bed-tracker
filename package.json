@@ -7,10 +7,14 @@
   "scripts": {
     "build": "d2-app-scripts build",
     "start": "d2-app-scripts start",
-    "test": "d2-app-scripts test"
+    "test": "d2-app-scripts test",
+    "predeploy": "d2-app-scripts build",
+    "deploy": "gh-pages -d build"
   },
+  "homepage": "http://manzzup.github.io/covid19-icu-bed-tracker",
   "devDependencies": {
-    "@dhis2/cli-app-scripts": "^3.2.7"
+    "@dhis2/cli-app-scripts": "^3.2.7",
+    "gh-pages": "^2.2.0"
   },
   "dependencies": {
     "@dhis2/app-runtime": "^2.1.0",

@@ -24,7 +24,7 @@ function findOption(optionSet, code){
     return search[0];
 }
 
-export default function ConfigureBedModal({ open, onClose, selectedBed }){
+export default function ConfigureBedModal({ open, onClose, selectedBed, editable }){
     const metaData = useSelector(state => state.app.metaData);
     const activeICU = useSelector(state => state.app.activeICU);
 
@@ -69,7 +69,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
                     }
                 }
             }
-            console.log(_formState);
+            
             setFormState(_formState);
             setBedAttributtes(_bedAttributes)
         }
@@ -95,6 +95,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
                     name={attrib.id} 
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
+                    disabled={!editable}
                     >
                         {attrib.optionSet.options.map((sel, key) => 
                             <SingleSelectOption key={key} label={sel.displayName} value={sel.code} />
@@ -112,6 +113,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
                     type="text"
                     onChange={(val) => updateField(attrib.id, val.value)}
                     value={formState[attrib.id]}
+                    disabled={!editable}
                 />
             )
         }
@@ -125,6 +127,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
                     name={attrib.id} 
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
+                    disabled={!editable}
                     >
                         {booleanSelections.map((sel, key) => 
                             <SingleSelectOption key={key} label={sel.label} value={sel.value} />
@@ -159,7 +162,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
     return (
         <Modal open>
             <ModalTitle>
-                Add ICU Bed
+                { !editable ? "View" : selectedBed ? "Update" : "Add" } ICU Bed
             </ModalTitle>
             <ModalContent>
                 <div className="form">
@@ -177,13 +180,15 @@ export default function ConfigureBedModal({ open, onClose, selectedBed }){
                     >
                         Close
                     </Button>
-                    <Button
-                        onClick={addBed}
-                        primary
-                        type="button"
-                    >
-                        { selectedBed ? "Update Bed" : "Add New Bed" }
-                    </Button>
+                    {editable && 
+                        <Button
+                            onClick={addBed}
+                            primary
+                            type="button"
+                        >
+                            { selectedBed ? "Update Bed" : "Add New Bed" }
+                        </Button>
+                    }
                 </ButtonStrip>
             </ModalActions>
         </Modal>

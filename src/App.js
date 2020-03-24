@@ -14,14 +14,26 @@ import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
 import { setActiveICU, setMetaData } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed } from './state/apiActions';
+import RegisterPatientModal from './components/RegisterPatientModal';
+import useConfirmation from './components/useConfirmationHook';
+
+function getAttributeByName(bed, name){
+    for(var attrib of bed.attributes){
+        if(attrib.displayName === name){
+            return attrib.value; 
+        }
+    }
+    return "";
+}
 
 function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
-    const [bedData, setBedData] = useState([]);
+    const bedData = useSelector(state => state.app.icuList);
+    // const [bedData, setBedData] = useState([]);
     
     useEffect(() => {
-        setBedData(api.getICUByOrgUnit("lka"))
+        // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
 
     const onBedTypeChange = () => {
@@ -32,12 +44,12 @@ function ViewOrgICU(){
         return <p>Please select an organization unit</p>
     }
 
-    if(activeOrgUnit.level === 4){
+    if(activeOrgUnit.level === 6){
         return <ViewICUBeds />
     }
 
     return (
-        activeOrgUnit.level < 4 && (
+        activeOrgUnit.level < 6 && (
             <>
                 <span className="t20">Showing ICU Bed data for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
@@ -71,11 +83,54 @@ function ViewOrgICU(){
 
 function ViewICUBeds(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
-    const [beds, setBeds] = useState([]);
+    const activeICU = useSelector(state => state.app.activeICU);
+    const metaData = useSelector(state => state.app.metaData);
+    const programStage = useSelector(state => state.app.ICUEventId);
+
+    const [showConfigure, setShowConfigure] = useState(false);
+    const [bedModalOpen, setBedModalOpen] = useState(false);
+    const [patientModalOpen, setPatientModalOpen] = useState(false);
+    const [selectedBed, setSelectedBed] = useState(null);
+
+    const dispatch = useDispatch();
+    const confirmation = useConfirmation();
 
     useEffect(() => {
-        setBeds(api.getICUBeds(50));
-    }, []);
+        if(metaData){
+            dispatch(getICUBeds(activeICU.id, metaData.id));
+        }        
+    }, [metaData, activeICU.id]);
+
+    // useEffect(() => {
+    //     if(metaData){
+    //         dispatch(getICUBeds(activeICU.id, metaData.id));
+    //     }        
+    // }, [activeICU.id]);
+
+    const onViewBed = (bed) => {
+        setSelectedBed(bed);
+        setBedModalOpen(true);
+    }
+
+    const onOccupyBed = (bed) => {
+        setSelectedBed(bed);
+        setPatientModalOpen(true);
+        // dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted"));
+    }
+
+    const onReserveBed = (bed) => {
+        confirmation.show("Do you want to confirm reserving this bed?", 
+            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved")),
+            () => {}
+        );
+    }
+
+    const onDischargeBed = (bed) => {
+        confirmation.show("Do you want to confirm discharging this bed?", 
+            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Discharged")),
+            () => {}
+        );
+    }
 
     if(!activeOrgUnit){
         return <p>Please select an organization unit</p>
@@ -85,40 +140,68 @@ function ViewICUBeds(){
         <>
             <div className="inner-header">
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
-                <Button className="pull-right">Configure Beds</Button>
+                <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
             </div>
-            <div className="icu-bed-container">
-                {beds.map((bed, key) => (
-                    <ICUBed 
-                        key={key}
-                        name={bed.name}
-                        status={bed.status}
-                    />
-                ))}
-            </div>
+            {activeICU && 
+                <>
+                    {showConfigure && 
+                        <ViewConfigureBeds 
+                            onBack={() => setShowConfigure(false)}
+                        />
+                    }
+                    {!showConfigure &&
+                        <div className="icu-bed-container">
+                            {!activeICU.beds.length && 
+                                <p>No beds currently added</p>
+                            }
+                            {activeICU.beds.map((bed, key) => (
+                                <ICUBed 
+                                    key={key}
+                                    name={getAttributeByName(bed, "ICU - Bed Number")}
+                                    status={bed.status ? bed.status : "IDLE"}
+                                    onView={() => onViewBed(bed)}
+                                    onOccupy={() => onOccupyBed(bed)}
+                                    onDischarge={() => onDischargeBed(bed)}
+                                    onReserve={() => onReserveBed(bed)}
+                                />
+                            ))}
+                        </div>
+                    }
+                </>
+                
+            }
+            {bedModalOpen && 
+                <ConfigureBedModal 
+                    open={bedModalOpen}
+                    onClose={() => setBedModalOpen(false)}
+                    selectedBed={selectedBed}
+                    editable={false}
+                />
+            }
+            {patientModalOpen && 
+                <RegisterPatientModal 
+                    open={patientModalOpen}
+                    onClose={() => setPatientModalOpen(false)}
+                    selectedBed={selectedBed}
+                />
+            }
         </>
     )
 }
 
-function ViewConfigureBeds(){
+function ViewConfigureBeds({ onBack }){
     const [bedModalOpen, setBedModalOpen] = useState(false);
     const dispatch = useDispatch();
 
     const activeICU = useSelector(state => state.app.activeICU);
+    const metaData = useSelector(state => state.app.metaData);
     const [selectedBed, setSelectedBed] = useState(null);
 
-    useEffect(() => {
-        dispatch(getICUBeds(activeICU.id));
-    }, []);
+    const confirmation = useConfirmation();
 
-    const getAttributeByName = (bed, name) => {
-        for(var attrib of bed.attributes){
-            if(attrib.displayName === name){
-                return attrib.value; 
-            }
-        }
-        return "";
-    }
+    // useEffect(() => {
+    //     dispatch(getICUBeds(activeICU.id, metaData.id));
+    // }, []);
 
     const onAddBed = () => {
         setSelectedBed(null);
@@ -130,11 +213,21 @@ function ViewConfigureBeds(){
         setBedModalOpen(true);
     }
 
+    const onRemoveBed = (bed) => {
+        confirmation.show("Do you really want to remove this bed?", 
+            () => {
+                dispatch(removeBed(activeICU.id, bed.enrollments[0].enrollment));
+            },
+            () => {}
+        );
+        
+    }
+
     return (
         <>
             <div className="inner-header">
                 <ButtonStrip end>
-                    <Button>Back</Button>
+                    <Button onClick={onBack}>Back</Button>
                     <Button primary onClick={onAddBed}>Add New Bed</Button>
                 </ButtonStrip>
             </div>
@@ -158,7 +251,7 @@ function ViewConfigureBeds(){
                                     <TableCell>
                                         <ButtonStrip>
                                             <Button onClick={() => onSelectBed(bed)}>View Details</Button>
-                                            <Button destructive>Remove</Button>
+                                            <Button destructive onClick={() => onRemoveBed(bed)}>Remove</Button>
                                         </ButtonStrip>
                                     </TableCell>
                                 </TableRow>
@@ -172,6 +265,7 @@ function ViewConfigureBeds(){
                     open={bedModalOpen}
                     onClose={() => setBedModalOpen(false)}
                     selectedBed={selectedBed}
+                    editable={true}
                 />
             }
         </>
@@ -179,36 +273,11 @@ function ViewConfigureBeds(){
 }
 
 function ContainerView({children}){
-    const query = {
-        metaData: {
-            resource: 'programs/C1wTfmmMQUn',
-            params: {
-                fields: "id,name,trackedEntityType[id, displayName, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, valueType, optionSet[options[displayName, id, code]]]]]"
-            },
-        }
-    }
-    const { loading, error, data, refetch } = useDataQuery(query);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if(data){
-            let _metaData = {
-                id: data.metaData.id,
-                name: data.metaData.name,
-                trackedEntityType: {
-                    id: data.metaData.trackedEntityType.id,
-                    displayName: data.metaData.trackedEntityType.displayName,
-                    trackedEntityTypeAttributes: []
-                }
-            };
-
-            for(var attrib of data.metaData.trackedEntityType.trackedEntityTypeAttributes){
-                _metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
-            }
-
-            dispatch(setMetaData(_metaData));
-        }
-    }, [loading]);
+        dispatch(getMetaData());
+    }, []);
 
     return (
         <div style={{height:"100vh"}}>
@@ -239,9 +308,9 @@ function MyApp(){
                         <OrgUnits />
                     </div>
                     <div className="right-column">
-                        {/* <ViewOrgICU /> */}
+                        <ViewOrgICU />
                         {/* <ViewICUBeds /> */}
-                        <ViewConfigureBeds />
+                        {/* <ViewConfigureBeds /> */}
                     </div>
                 </div>
             </ContainerView>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom'
 import { Popper, ScreenCover } from '@dhis2/ui-core';
 
-export default function ICUBed({ name, status }){
+export default function ICUBed({ name, status, onView, onOccupy, onDischarge, onReserve }){
 
     const ref = useRef(null);
     const [open, setOpen] = useState(false);
@@ -38,14 +38,16 @@ export default function ICUBed({ name, status }){
                             reference={ref}
                         >
                             <div className="bed-options">
-                                {status === "AVAILABLE" &&
-                                    <div>Occupy</div>
+                                { (status === "AVAILABLE" || status === "RESERVED") &&
+                                    <div onClick={() => { setOpen(false); onOccupy()}}>Occupy</div>
                                 }
-                                { (status === "OCCUPIED" || status === "RESERVED") &&
-                                    <div>Release</div>
+                                { status === "AVAILABLE" &&
+                                    <div onClick={() => { setOpen(false); onReserve()}}>Reserve</div>
                                 }
-                                <div>View</div>
-                                <div>Disable</div>
+                                { status !== "AVAILABLE" &&
+                                    <div onClick={() => { setOpen(false); onDischarge()}}>Discharge</div>
+                                }
+                                <div onClick={onView}>View</div>
                             </div>
                         </Popper>
                     </ScreenCover>,
