@@ -66,7 +66,6 @@ export default function OrgUnits(){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
             root.children = processList(orgData, root.children);
-            console.log(root);
             setOrgRoot(root);
         }
     }, [loading]);
@@ -108,7 +107,11 @@ export default function OrgUnits(){
                 ...icu,
                 distance: 0,
                 total: null,
-                available: null
+                available: null,
+                geometry: {
+                    lat: 0,
+                    lng: 0
+                }
             })
         }
         dispatch(updateFilteredICUList(icus));

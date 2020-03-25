@@ -12,9 +12,9 @@ import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData, setActiveOrgUnit } from './state/appState';
+import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds, getMetaData, addBedEvent, removeBed } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
@@ -33,12 +33,8 @@ function ViewOrgICU(){
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
     const metaData = useSelector(state => state.app.metaData);
-    // const [bedData, setBedData] = useState([]);
-    const dispatch = useDispatch();
 
-    useEffect(() => {
-        // setBedData(api.getICUByOrgUnit("lka"))
-    }, []);
+    const dispatch = useDispatch();
     
     const bedTypeId = 'XYNBoDZS0aV'
     const covidTypeId = 'Xt5tV6OFSEW'
@@ -50,10 +46,30 @@ function ViewOrgICU(){
     }
     const [filters, setFilters] = useState({ [bedTypeId]:[], [covidTypeId]:[]})
 
-    
+    useEffect(() => {
+        if(bedData){
+            for(var icu of bedData){
+                if(icu.total === null){
+                    dispatch(getICUStat(icu, filters));
+                    dispatch(updateICUStat({
+                        icuId: icu.id,
+                        stat: {
+                            total: "Updating...",
+                            available: null
+                        }
+                    }));
+                }
+            }
+        }        
+    }, [bedData]);
 
-    const onBedTypeChange = () => {
-    }
+    useEffect(() => {
+        if(bedData){
+            for(var icu of bedData){
+                dispatch(getICUStat(icu, filters));    
+            }
+        }        
+    }, [filters]);
 
     if(!activeOrgUnit){
         return <p>Please select an organization unit</p>
@@ -76,11 +92,6 @@ function ViewOrgICU(){
         }))
     }
 
-    const filterData = () => {
-        //filter logic 
-        return bedData
-    }
-
     return (
         activeOrgUnit.level < 6 && (
             <>
@@ -91,8 +102,8 @@ function ViewOrgICU(){
                             placeholder={bedTypeData.displayName}
                             onChange={({selected})=>{setFilters({...filters, [bedTypeId]:selected})}}
                         >
-                            {bedTypeData && bedTypeData.optionSet.options.map((option)=>(
-                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            {bedTypeData && bedTypeData.optionSet.options.map((option, key)=>(
+                                <MultiSelectOption key={key} value={option.code} label={option.displayName} />
                             ))}
                         </MultiSelect>
                         <MultiSelect 
@@ -100,22 +111,22 @@ function ViewOrgICU(){
                             placeholder={covidTypeData.displayName}
                             onChange={({selected})=>{setFilters({...filters, [covidTypeId]:selected})}}
                         >
-                            {covidTypeData && covidTypeData.optionSet.options.map((option)=>(
-                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            {covidTypeData && covidTypeData.optionSet.options.map((option, key)=>(
+                                <MultiSelectOption key={key} value={option.code} label={option.displayName} />
                             ))}
                         </MultiSelect>
                 </div>
                 <div className="icu-org">
                     <div className="icu-table">
                         <ICUTable 
-                            data={filterData()}
+                            data={bedData}
                             onSelectICU={onSelectICU}
                         />
                     </div>
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
-                            data={filterData()}
+                            data={bedData}
                         />
                     </div>
                 </div>
@@ -144,12 +155,6 @@ function ViewICUBeds(){
             dispatch(getICUBeds(activeICU.id, metaData.id));
         }        
     }, [metaData, activeICU.id]);
-
-    // useEffect(() => {
-    //     if(metaData){
-    //         dispatch(getICUBeds(activeICU.id, metaData.id));
-    //     }        
-    // }, [activeICU.id]);
 
     const onViewBed = (bed) => {
         setSelectedBed(bed);

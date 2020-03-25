@@ -323,10 +323,13 @@ export function getICUStat(icu, filters = { }){
         try{
             let filtersQuery = "";
             for(var filter in filters){
-                filtersQuery += `${filter}:IN:${filters[filter].join(";")},`
+                if(filters[filter].length === 0){
+                    continue;
+                }
+                const values = filters[filter].map(f => f.value);
+                filtersQuery += `${filter}:IN:${values.join(";")},`
             }
             filtersQuery = filtersQuery.substr(0, filtersQuery.length - 1);
-            console.log(filtersQuery);
             // first we complete last event
             const query  = {
                 events: {

@@ -34,8 +34,7 @@ function sortData(field, data, state){
     setSortOrder(sortOrder*-1)
 }
 
-export default function ICUTable({ data, onSelectICU, filters }){
-
+export default function ICUTable({ data, onSelectICU }){
     const [locationData, setLocationData] = useState([])
     const [sortedBy, setSortedBy] = useState('distance')
     const [sortOrder, setSortOrder] = useState(1)
@@ -53,15 +52,6 @@ export default function ICUTable({ data, onSelectICU, filters }){
     useEffect(()=>{
         sortData(sortedBy, data, stateData);
     },[data])
-
-    const getOrResolveICUStat = (icu) => {
-        if(icu.total === null){
-            dispatch(getICUStat(icu, filters));
-            return "Updating....";
-        }
-
-        return icu.total;
-    }
 
     if(!data){ return <div></div> }
 
@@ -109,7 +99,7 @@ export default function ICUTable({ data, onSelectICU, filters }){
                 <TableRow key={key}>
                     <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name}</a></TableCell>
                     <TableCell>{loc.distance}</TableCell>
-                    <TableCell>{ getOrResolveICUStat(loc) }</TableCell>
+                    <TableCell>{ loc.total }</TableCell>
                     <TableCell>{loc.available}</TableCell>
                     <TableCell>
                         <p>Dr. John Doe</p>

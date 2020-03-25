@@ -66,11 +66,12 @@ export default function ICUMap(props) {
                 {data.map((ICUEntry, index) => {
                     return (
                         <Marker
-                            position={{ lat: ICUEntry.lat, lng: ICUEntry.lng }}
+                            position={{ lat: ICUEntry.geometry.lat, lng: ICUEntry.geometry.lng }}
                             onClick={() => { onMarkerClick(ICUEntry) }}
                             onMouseOver={() => { handleMarkerOnHover(ICUEntry) }}
                             onMouseOut={() => { handleMarkerOnHover(infoWindowInitData) }}
                             options={ICUEntry.available>0?markerAvailableOptions: markerUnavailableOptions}
+                            key={index}
                         />)
                 })}
                 {infoWindowData.visible &&
