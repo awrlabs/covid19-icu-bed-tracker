@@ -10,7 +10,7 @@ const query = {
         resource: 'organisationUnits.json',
         params: {
             paging: 'false',
-            fields: "id,name,level,children"
+            fields: "id,name,level,children,geometry"
         },
     }
 }
@@ -108,10 +108,14 @@ export default function OrgUnits(){
                 distance: 0,
                 total: null,
                 available: null,
-                geometry: {
-                    lat: 0,
-                    lng: 0
-                }
+                geometry: icu.geometry ? 
+                            {
+                                lat: icu.geometry.coordinates[1],
+                                lng: icu.geometry.coordinates[0]
+                            } : {
+                                lat: 0,
+                                lng: 0
+                            }
             })
         }
         dispatch(updateFilteredICUList(icus));
