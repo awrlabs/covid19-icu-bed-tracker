@@ -29,17 +29,30 @@ function getAttributeByName(bed, name){
 }
 
 function ViewOrgICU(){
+
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
+    const metaData = useSelector(state => state.app.metaData);
     // const [bedData, setBedData] = useState([]);
     const dispatch = useDispatch();
 
     useEffect(() => {
         // setBedData(api.getICUByOrgUnit("lka"))
     }, []);
+    
+    const bedTypeId = 'XYNBoDZS0aV'
+    const covidTypeId = 'Xt5tV6OFSEW'
+    let bedTypeData = null
+    let covidTypeData = null
+    if(metaData){
+        bedTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === bedTypeId );
+        covidTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === covidTypeId );
+    }
+    const [filters, setFilters] = useState({ [bedTypeId]:[], [covidTypeId]:[]})
+
+    
 
     const onBedTypeChange = () => {
-
     }
 
     if(!activeOrgUnit){
@@ -63,39 +76,46 @@ function ViewOrgICU(){
         }))
     }
 
+    const filterData = () => {
+        //filter logic 
+        return bedData
+    }
+
     return (
         activeOrgUnit.level < 6 && (
             <>
                 <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
-                    
-                        <MultiSelect placeholder="ICU Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Medical" />
-                            <MultiSelectOption value="type01" label="Surgical" />
-                            <MultiSelectOption value="type01" label="Neurosurgical" />
-                            <MultiSelectOption value="type01" label="Pediatric" />
-                            <MultiSelectOption value="type01" label="Neonatal" />
-                            <MultiSelectOption value="type01" label="Other" />
+                        <MultiSelect 
+                            selected={filters[bedTypeId]}  
+                            placeholder={bedTypeData.displayName}
+                            onChange={({selected})=>{setFilters({...filters, [bedTypeId]:selected})}}
+                        >
+                            {bedTypeData && bedTypeData.optionSet.options.map((option)=>(
+                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            ))}
                         </MultiSelect>
-                        <MultiSelect placeholder="Bed Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Type 01"  onClick={onBedTypeChange} />
+                        <MultiSelect 
+                            selected={filters[covidTypeId]} 
+                            placeholder={covidTypeData.displayName}
+                            onChange={({selected})=>{setFilters({...filters, [covidTypeId]:selected})}}
+                        >
+                            {covidTypeData && covidTypeData.optionSet.options.map((option)=>(
+                                <MultiSelectOption value={option.code} label={option.displayName} />
+                            ))}
                         </MultiSelect>
-                        <MultiSelect placeholder="Diagnosis Type" onChange={onBedTypeChange}>
-                            <MultiSelectOption value="type01" label="Type 01"  onClick={onBedTypeChange} />
-                        </MultiSelect>
-                    
                 </div>
                 <div className="icu-org">
                     <div className="icu-table">
                         <ICUTable 
-                            data={bedData}
+                            data={filterData()}
                             onSelectICU={onSelectICU}
                         />
                     </div>
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
-                            data={bedData}
+                            data={filterData()}
                         />
                     </div>
                 </div>
