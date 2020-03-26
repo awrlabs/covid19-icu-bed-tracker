@@ -4,8 +4,9 @@ import { DataQuery, useDataQuery, useDataEngine } from '@dhis2/app-runtime'
 import i18n from '@dhis2/d2-i18n'
 import OrgUnits from './components/OrgUnits'
 import './App.css';
-import { Card, MultiSelect, MultiSelectOption, MultiSelectField, Button, ButtonStrip, 
-         Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,
+import {
+    Card, MultiSelect, MultiSelectOption, MultiSelectField, Button, ButtonStrip,
+    Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,
 } from '@dhis2/ui-core';
 import ICUTable from './components/ICUTable';
 import * as api from "./mockapi";
@@ -18,38 +19,39 @@ import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat } from './s
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
+import Notification from './components/Notification'
 
-function getAttributeByName(bed, name){
-    for(var attrib of bed.attributes){
-        if(attrib.displayName === name){
-            return attrib.value; 
+function getAttributeByName(bed, name) {
+    for (var attrib of bed.attributes) {
+        if (attrib.displayName === name) {
+            return attrib.value;
         }
     }
     return "";
 }
 
-function ViewOrgICU(){
+function ViewOrgICU() {
 
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const bedData = useSelector(state => state.app.icuList);
     const metaData = useSelector(state => state.app.metaData);
 
     const dispatch = useDispatch();
-    
+
     const bedTypeId = 'XYNBoDZS0aV'
     const covidTypeId = 'Xt5tV6OFSEW'
     let bedTypeData = null
     let covidTypeData = null
-    if(metaData){
-        bedTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === bedTypeId );
-        covidTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find( ({ id }) => id === covidTypeId );
+    if (metaData) {
+        bedTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find(({ id }) => id === bedTypeId);
+        covidTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find(({ id }) => id === covidTypeId);
     }
-    const [filters, setFilters] = useState({ [bedTypeId]:[], [covidTypeId]:[]})
+    const [filters, setFilters] = useState({ [bedTypeId]: [], [covidTypeId]: [] })
 
     useEffect(() => {
-        if(bedData){
-            for(var icu of bedData){
-                if(icu.total === null){
+        if (bedData) {
+            for (var icu of bedData) {
+                if (icu.total === null) {
                     dispatch(getICUStat(icu, filters));
                     dispatch(updateICUStat({
                         icuId: icu.id,
@@ -60,22 +62,22 @@ function ViewOrgICU(){
                     }));
                 }
             }
-        }        
+        }
     }, [bedData]);
 
     useEffect(() => {
-        if(bedData){
-            for(var icu of bedData){
-                dispatch(getICUStat(icu, filters));    
+        if (bedData) {
+            for (var icu of bedData) {
+                dispatch(getICUStat(icu, filters));
             }
-        }        
+        }
     }, [filters]);
 
-    if(!activeOrgUnit){
+    if (!activeOrgUnit) {
         return <p>Please select an organization unit</p>
     }
 
-    if(activeOrgUnit.level === 6){
+    if (activeOrgUnit.level === 6) {
         return <ViewICUBeds />
     }
 
@@ -97,35 +99,35 @@ function ViewOrgICU(){
             <>
                 <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
-                        <MultiSelect 
-                            selected={filters[bedTypeId]}  
-                            placeholder={bedTypeData.displayName}
-                            onChange={({selected})=>{setFilters({...filters, [bedTypeId]:selected})}}
-                        >
-                            {bedTypeData && bedTypeData.optionSet.options.map((option, key)=>(
-                                <MultiSelectOption key={key} value={option.code} label={option.displayName} />
-                            ))}
-                        </MultiSelect>
-                        <MultiSelect 
-                            selected={filters[covidTypeId]} 
-                            placeholder={covidTypeData.displayName}
-                            onChange={({selected})=>{setFilters({...filters, [covidTypeId]:selected})}}
-                        >
-                            {covidTypeData && covidTypeData.optionSet.options.map((option, key)=>(
-                                <MultiSelectOption key={key} value={option.code} label={option.displayName} />
-                            ))}
-                        </MultiSelect>
+                    <MultiSelect
+                        selected={filters[bedTypeId]}
+                        placeholder={bedTypeData.displayName}
+                        onChange={({ selected }) => { setFilters({ ...filters, [bedTypeId]: selected }) }}
+                    >
+                        {bedTypeData && bedTypeData.optionSet.options.map((option, key) => (
+                            <MultiSelectOption key={key} value={option.code} label={option.displayName} />
+                        ))}
+                    </MultiSelect>
+                    <MultiSelect
+                        selected={filters[covidTypeId]}
+                        placeholder={covidTypeData.displayName}
+                        onChange={({ selected }) => { setFilters({ ...filters, [covidTypeId]: selected }) }}
+                    >
+                        {covidTypeData && covidTypeData.optionSet.options.map((option, key) => (
+                            <MultiSelectOption key={key} value={option.code} label={option.displayName} />
+                        ))}
+                    </MultiSelect>
                 </div>
                 <div className="icu-org">
                     <div className="icu-table">
-                        <ICUTable 
+                        <ICUTable
                             data={bedData}
                             onSelectICU={onSelectICU}
                         />
                     </div>
                     <div className="icu-map">
                         <ICUMap
-                            onMarkerClick={(ICUEntry)=>{console.log(ICUEntry)}}
+                            onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
                             data={bedData}
                         />
                     </div>
@@ -136,7 +138,7 @@ function ViewOrgICU(){
 
 }
 
-function ViewICUBeds(){
+function ViewICUBeds() {
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const activeICU = useSelector(state => state.app.activeICU);
     const metaData = useSelector(state => state.app.metaData);
@@ -151,9 +153,9 @@ function ViewICUBeds(){
     const confirmation = useConfirmation();
 
     useEffect(() => {
-        if(metaData){
+        if (metaData) {
             dispatch(getICUBeds(activeICU.id, metaData.id));
-        }        
+        }
     }, [metaData, activeICU.id]);
 
     const onViewBed = (bed) => {
@@ -168,20 +170,20 @@ function ViewICUBeds(){
     }
 
     const onReserveBed = (bed) => {
-        confirmation.show("Do you want to confirm reserving this bed?", 
+        confirmation.show("Do you want to confirm reserving this bed?",
             () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved")),
-            () => {}
+            () => { }
         );
     }
 
     const onDischargeBed = (bed) => {
-        confirmation.show("Do you want to confirm discharging this bed?", 
+        confirmation.show("Do you want to confirm discharging this bed?",
             () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Discharged")),
-            () => {}
+            () => { }
         );
     }
 
-    if(!activeOrgUnit){
+    if (!activeOrgUnit) {
         return <p>Please select an organization unit</p>
     }
 
@@ -191,20 +193,20 @@ function ViewICUBeds(){
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
                 <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
             </div>
-            {activeICU && 
+            {activeICU &&
                 <>
-                    {showConfigure && 
-                        <ViewConfigureBeds 
+                    {showConfigure &&
+                        <ViewConfigureBeds
                             onBack={() => setShowConfigure(false)}
                         />
                     }
                     {!showConfigure &&
                         <div className="icu-bed-container">
-                            {!activeICU.beds.length && 
+                            {!activeICU.beds.length &&
                                 <p>No beds currently added</p>
                             }
                             {activeICU.beds.map((bed, key) => (
-                                <ICUBed 
+                                <ICUBed
                                     key={key}
                                     name={getAttributeByName(bed, "ICU - Bed Number")}
                                     status={bed.status ? bed.status : "IDLE"}
@@ -217,18 +219,18 @@ function ViewICUBeds(){
                         </div>
                     }
                 </>
-                
+
             }
-            {bedModalOpen && 
-                <ConfigureBedModal 
+            {bedModalOpen &&
+                <ConfigureBedModal
                     open={bedModalOpen}
                     onClose={() => setBedModalOpen(false)}
                     selectedBed={selectedBed}
                     editable={false}
                 />
             }
-            {patientModalOpen && 
-                <RegisterPatientModal 
+            {patientModalOpen &&
+                <RegisterPatientModal
                     open={patientModalOpen}
                     onClose={() => setPatientModalOpen(false)}
                     selectedBed={selectedBed}
@@ -238,7 +240,7 @@ function ViewICUBeds(){
     )
 }
 
-function ViewConfigureBeds({ onBack }){
+function ViewConfigureBeds({ onBack }) {
     const [bedModalOpen, setBedModalOpen] = useState(false);
     const dispatch = useDispatch();
 
@@ -263,13 +265,13 @@ function ViewConfigureBeds({ onBack }){
     }
 
     const onRemoveBed = (bed) => {
-        confirmation.show("Do you really want to remove this bed?", 
+        confirmation.show("Do you really want to remove this bed?",
             () => {
                 dispatch(removeBed(activeICU.id, bed.enrollments[0].enrollment));
             },
-            () => {}
+            () => { }
         );
-        
+
     }
 
     return (
@@ -284,13 +286,13 @@ function ViewConfigureBeds({ onBack }){
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCellHead>Bed No</TableCellHead>  
+                            <TableCellHead>Bed No</TableCellHead>
                             <TableCellHead>Bed Type</TableCellHead>
-                            <TableCellHead>Covid Type</TableCellHead> 
-                            <TableCellHead>Action</TableCellHead> 
+                            <TableCellHead>Covid Type</TableCellHead>
+                            <TableCellHead>Action</TableCellHead>
                         </TableRow>
                     </TableHead>
-                    {activeICU && 
+                    {activeICU &&
                         <TableBody>
                             {activeICU.beds.map((bed, key) => (
                                 <TableRow key={key}>
@@ -309,8 +311,8 @@ function ViewConfigureBeds({ onBack }){
                     }
                 </Table>
             </div>
-            {bedModalOpen && 
-                <ConfigureBedModal 
+            {bedModalOpen &&
+                <ConfigureBedModal
                     open={bedModalOpen}
                     onClose={() => setBedModalOpen(false)}
                     selectedBed={selectedBed}
@@ -321,7 +323,7 @@ function ViewConfigureBeds({ onBack }){
     )
 }
 
-function ContainerView({children}){
+function ContainerView({ children }) {
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -329,15 +331,15 @@ function ContainerView({children}){
     }, []);
 
     return (
-        <div style={{height:"100vh"}}>
+        <div style={{ height: "100vh" }}>
             {children}
         </div>
     )
 }
 
-function MyApp(){
+function MyApp() {
     const dhisEngine = useDataEngine();
-    
+
     const customizedMiddleware = getDefaultMiddleware({
         thunk: {
             extraArgument: dhisEngine
@@ -348,7 +350,7 @@ function MyApp(){
         reducer: rootReducer,
         middleware: customizedMiddleware
     })
-    
+
     return (
         <Provider store={store}>
             <ContainerView>
@@ -361,6 +363,17 @@ function MyApp(){
                         {/* <ViewICUBeds /> */}
                         {/* <ViewConfigureBeds /> */}
                     </div>
+                </div>
+                <div
+                    style={{
+                        bottom: 0,
+                        left: 0,
+                        paddingLeft: 16,
+                        position: 'fixed',
+                        width: '60%'
+                    }}
+                >
+                    <Notification/>
                 </div>
             </ContainerView>
         </Provider>
