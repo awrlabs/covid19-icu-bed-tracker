@@ -1,5 +1,6 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat } from './appState';
 import * as moment from 'moment';
+import { showNotification } from './notificationState'
 
 const ICU_EVENT = "ICU - Bed Event";
 
@@ -104,6 +105,10 @@ export function getMetaData(){
             metaData["dataElements"] = _dataElements;
             dispatch(setMetaData(metaData));
         }catch(error){
+            dispatch(showNotification({
+                message:'failed to load metadata',
+                type:'error'
+            }))
             console.log("Error in query:", error)
         }
     }
@@ -135,6 +140,10 @@ export function getICUBeds(icuId, program){
                 beds
             }));
         }catch(error){
+            dispatch(showNotification({
+                message:'failed to load icu bed data',
+                type:'error'
+            }))
             console.log("Error in query:", error)
         }
     }
@@ -215,6 +224,10 @@ export function createBed(teID, icuId, programId, attributes){
             dispatch(addBedEvent(instanceId, programId, getState().app.ICUEventId, icuId, "Discharged"));
             dispatch(getICUBeds(icuId, programId));
         }catch(error){
+            dispatch(showNotification({
+                message:'error in creating bed',
+                type:'error'
+            }))
             console.log("Error in creating:", error)
         }
     }
@@ -235,6 +248,10 @@ export function updateBed(icuId, bedId, attributes){
             const response = await dhisEngine.mutate(mutation);
             dispatch(getICUBeds(icuId, getState().app.metaData.id));
         }catch(error){
+            dispatch(showNotification({
+                message:'error in updating bed',
+                type:'error'
+            }))
             console.log("Error in creating:", error)
         }
     }
@@ -251,6 +268,10 @@ export function removeBed(icuId, enrollmentId){
             const response = await dhisEngine.mutate(mutation);
             dispatch(getICUBeds(icuId, getState().app.metaData.id));
         }catch(error){
+            dispatch(showNotification({
+                message:'error in deleting bed',
+                type:'error'
+            }))
             console.log("Error in creating:", error)
         }
     }
@@ -313,6 +334,10 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
             const response = await dhisEngine.mutate(mutation);
             dispatch(getBedStatus(teId));
         }catch(error){
+            dispatch(showNotification({
+                message:'error in adding bed event',
+                type:'error'
+            }))
             console.log("Error in creating:", error)
         }
     }
@@ -378,6 +403,10 @@ export function getICUStat(icu, filters = { }){
                 stat: stat
             }))
         }catch(error){
+            dispatch(showNotification({
+                message:'error in retrieving ICU status',
+                type:'error'
+            }))
             console.log("Error in creating:", error)
         }
     }
