@@ -41,12 +41,16 @@ const appSlice = createSlice({
             const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
             state.icuList[icuIndex].available = action.payload.stat.available;
             state.icuList[icuIndex].total = action.payload.stat.total;
+        },
+        updateICUDistance(state, action){
+            const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
+            state.icuList[icuIndex].distance = action.payload.distance;
         }
     }
 })
 
 export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, 
                updateBedStatus, updateFilteredICUList, updateICUStat,
-               setActiveUser 
+               setActiveUser, updateICUDistance
             } = appSlice.actions;
 export default appSlice.reducer;

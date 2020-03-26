@@ -13,7 +13,7 @@ import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat } from './state/appState';
+import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat, updateICUDistance } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
@@ -34,6 +34,7 @@ function getAttributeByName(bed, name) {
 function ViewOrgICU() {
 
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
+    const activeUser = useSelector(state => state.app.activeUser);
     const bedData = useSelector(state => state.app.icuList);
     const metaData = useSelector(state => state.app.metaData);
 
@@ -95,6 +96,17 @@ function ViewOrgICU() {
         }))
     }
 
+    const onUpdateDistance = (data, status) => {
+        if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
+            for(var ind in bedData){
+                dispatch(updateICUDistance({
+                    icuId: bedData[ind].id,
+                    distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
+                }))
+            }            
+        }
+    }
+
     return (
         activeOrgUnit.level < 6 && (
             <>
@@ -130,6 +142,8 @@ function ViewOrgICU() {
                         <ICUMap
                             onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
                             data={bedData}
+                            origin={activeUser.organisationUnits.length > 0 ? activeUser.organisationUnits[0].geometry : null}
+                            updateDistance={onUpdateDistance}
                         />
                     </div>
                 </div>

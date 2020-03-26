@@ -56,7 +56,7 @@ export function getActiveUser(){
                 user: {
                     resource: 'me',
                     params: {
-                        fields: "id,displayName,userGroups,organisationUnits"
+                        fields: "id,displayName,userGroups,organisationUnits[id, geometry]"
                     }
                 }
             }
@@ -98,7 +98,6 @@ export function getMetaData(){
                 }
             }
             const { program, dataElements } = await dhisEngine.query(query);
-            console.log(program);
             let metaData = {
                 id: program.id,
                 name: program.name,

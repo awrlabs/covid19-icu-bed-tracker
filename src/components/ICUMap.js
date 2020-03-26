@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GoogleMap, LoadScript, Marker, InfoBox } from '@react-google-maps/api'
+import { GoogleMap, LoadScript, Marker, InfoBox, DistanceMatrixService } from '@react-google-maps/api'
 
 
 const mapContainerStyle = {
@@ -19,7 +19,7 @@ const infoWindowInitData = {
 
 export default function ICUMap(props) {
 
-    const { onMarkerClick, data } = props
+    const { onMarkerClick, data, origin, updateDistance } = props
 
     const [infoWindowData, setInfoWindowData] = useState(infoWindowInitData)
 
@@ -49,6 +49,17 @@ export default function ICUMap(props) {
             strokeColor: '',
             strokeWeight: 0
             
+        }
+    }
+    let destinations = null;
+
+    if(origin){
+        console.log(origin);
+        destinations = data.map(d =>  d.geometry);
+        distanceRequest = {
+            origins: [{lat: origin[0], lng: origin[1]}],
+            destinations: destinations,
+            travelMode: 'DRIVING'
         }
     }
 
@@ -90,6 +101,12 @@ export default function ICUMap(props) {
                         </div>
                     </InfoBox>}
             </GoogleMap>
+            {origin && 
+                <DistanceMatrixService 
+                    options={distanceRequest}
+                    callback={(data, s) => updateDistance(data, status)}
+                />
+            }
         </LoadScript >
     )
 }
