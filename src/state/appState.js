@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 
 const initState = {
-    // activeOrgUnit: null,
+    activeUser: null,
     activeOrgUnit: null,
     activeICU: null,
     metaData: null,
@@ -17,7 +17,10 @@ const appSlice = createSlice({
             state.activeOrgUnit = action.payload;
         },
         setActiveICU(state, action){
-            state.activeICU = action.payload
+            state.activeICU = action.payload;
+        },
+        setActiveUser(state, action){
+            state.activeUser = action.payload;
         },
         setMetaData(state, action){
             state.metaData = action.payload
@@ -42,5 +45,8 @@ const appSlice = createSlice({
     }
 })
 
-export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, updateBedStatus, updateFilteredICUList, updateICUStat } = appSlice.actions;
+export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, 
+               updateBedStatus, updateFilteredICUList, updateICUStat,
+               setActiveUser 
+            } = appSlice.actions;
 export default appSlice.reducer;

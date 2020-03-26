@@ -31,7 +31,7 @@ const patientFieldset = [
     }    
 ]
 
-export default function RegisterPatientModal({ open, onClose, selectedBed}){
+export default function RegisterPatientModal({ open, onClose, selectedBed, actionType}){
 
     const [formState, setFormState] = useState({});
     const dispatch = useDispatch();
@@ -82,7 +82,11 @@ export default function RegisterPatientModal({ open, onClose, selectedBed}){
             })
         }
 
-        dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted", dataValues));
+        if(actionType === "admit"){
+            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted", dataValues));
+        }else if(actionType === "reserve"){
+            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved", dataValues));
+        }
         onClose();
     }
     
@@ -90,7 +94,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed}){
     return (
         <Modal open>
             <ModalTitle>
-                Admit New Patient
+                { actionType === "admit" ? 'Admit' : 'Reserve' } New Patient
             </ModalTitle>
             <ModalContent>
                 {patientFieldset.map((field, key) => getFormField(field, key))}

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom'
 import { Popper, ScreenCover } from '@dhis2/ui-core';
+import { hasPerm, ACTIONS } from './permissionUtils';
 
-export default function ICUBed({ name, status, onView, onOccupy, onDischarge, onReserve }){
+export default function ICUBed({ name, status, onView, onOccupy, onDischarge, onReserve, hasEventPerm }){
 
     const ref = useRef(null);
     const [open, setOpen] = useState(false);
@@ -24,7 +25,9 @@ export default function ICUBed({ name, status, onView, onOccupy, onDischarge, on
     }
 
     const onToggle = () => {
-        setOpen(!open);
+        if(hasEventPerm){
+            setOpen(!open);
+        }
     }
 
     return (

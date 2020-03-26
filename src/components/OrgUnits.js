@@ -54,18 +54,34 @@ export default function OrgUnits(){
         return _prunedChildren;
     }
 
-    // function pruneTree(root){
-    //     traverseResults = [];
-    //     traverse(root, 6);
-        
-    //     if(traverseResults)
-    // }
+    function mergeLevel(node, level=4){
+
+        if(node.level === level - 1){
+            // at level 3
+            let newChildren = [];
+            for(var child1 of node.children){
+                if(!child1.children) continue;
+                for(var child2 of child1.children){
+                    newChildren.push(child2);
+                }
+            }
+            node.children = newChildren;
+            return;
+        }
+
+        for(var child of node.children){
+            mergeLevel(child, level);
+        }
+    }
 
     useEffect(() => {
         if(data){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
             root.children = processList(orgData, root.children);
+
+            mergeLevel(root, 4);
+
             setOrgRoot(root);
         }
     }, [loading]);

@@ -110,3 +110,16 @@
 .icu-map{
     width: 40%;
 }
+
+.contact{
+    border: 1px solid #ccc;
+    padding: 2px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+    background-color: aliceblue;
+}
+
+.form h4{
+    margin-top: 30px !important;
+    margin-bottom: 10px;
+}

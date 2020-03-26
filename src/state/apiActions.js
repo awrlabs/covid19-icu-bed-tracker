@@ -1,4 +1,4 @@
-import { setICUBeds, setMetaData, updateBedStatus, updateICUStat } from './appState';
+import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 
@@ -49,6 +49,34 @@ function getEventStatus(event){
     return "";
 }
 
+export function getActiveUser(){
+    return async (dispatch, getState, dhisEngine) => {
+        try{
+            const query = {
+                user: {
+                    resource: 'me',
+                    params: {
+                        fields: "id,displayName,userGroups,organisationUnits"
+                    }
+                }
+            }
+            const { user } = await dhisEngine.query(query);
+            dispatch(setActiveUser({
+                id: user.id,
+                name: user.displayName,
+                group: user.userGroups.length > 0 ? user.userGroups[0].id : null,
+                organisationUnits: user.organisationUnits.map(ou => ou.id)
+            }))
+        }catch(error){
+            dispatch(showNotification({
+                message:'Error loading user',
+                type:'error'
+            }))
+            console.log("Error in query:", error)
+        }
+    }
+}
+
 export function getMetaData(){
     return async (dispatch, getState, dhisEngine) => {
         try{
@@ -57,7 +85,7 @@ export function getMetaData(){
                 program: {
                     resource: 'programs/C1wTfmmMQUn',
                     params: {
-                        fields: "id,name,trackedEntityType[id, displayName, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, valueType, optionSet[options[displayName, id, code]]]]]"
+                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]]"
                     },
                 },
                 dataElements: {
@@ -70,7 +98,7 @@ export function getMetaData(){
                 }
             }
             const { program, dataElements } = await dhisEngine.query(query);
-
+            console.log(program);
             let metaData = {
                 id: program.id,
                 name: program.name,
@@ -81,9 +109,27 @@ export function getMetaData(){
                 }
             };
 
+            let programAccess = {};
+            for(var ga of program.userGroupAccesses){
+                programAccess[ga.userGroupUid] = {
+                    canRead: ga.access.startsWith("rw"),
+                    canWrite: ga.access.startsWith("rwrw")
+                }
+            }
+            metaData['programAccess'] = programAccess;
+
             for(var attrib of program.trackedEntityType.trackedEntityTypeAttributes){
                 metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
             }
+
+            let teAccess = {};
+            for(var ga of program.trackedEntityType.userGroupAccesses){
+                teAccess[ga.userGroupUid] = {
+                    canRead: ga.access.startsWith("rw"),
+                    canWrite: ga.access.startsWith("rwrw")
+                }
+            }
+            metaData.trackedEntityType['access'] = teAccess;
 
             let _dataElements = {};
 

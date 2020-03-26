@@ -14,6 +14,29 @@ const booleanSelections = [
     { label: "Yes", value: 'true' },
 ];
 
+const experiseAttrbutes = [
+    "v5eNzdQsLox",
+    "eBlbs7BzVfX",
+    "JJ2DQSnlhfR",
+    "m64bCKnUD8L",
+    "Xar8cTc8XN0",
+    "k7eXIuzzhat",
+    "JZXI1GzSoYx",
+]
+
+const facilitiesAttributes = [
+    "Jio5MTDVFo4",
+    "yvOZEiBS5cd",
+    "CGp0lKLkSKY",
+    "YCILPvLTofG"
+]
+
+const infoAttributes = [
+    "tswabivShTy",
+    "Xt5tV6OFSEW",
+    "XYNBoDZS0aV"
+]
+
 function findAttribute(attributes, id){
     const search = attributes.filter(a => a.attribute === id);
     return search.length > 0 ? search[0].value : null;
@@ -86,12 +109,16 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
         })
     }
 
-    const getAttributeInput = (attrib, key) => {
+    const getAttributeInput = (attribId, key) => {
+        console.log(attribId);
+        console.log(bedAttributes);
+        const attrib = bedAttributes.find(b => b.id === attribId);
+        console.log(attrib);
         if(attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0){
             return (
                 <SingleSelectField
                     key={key}
-                    label={attrib.displayName} 
+                    label={attrib.formName} 
                     name={attrib.id} 
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
@@ -108,7 +135,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
             return (
                 <InputField 
                     key={key}
-                    label={attrib.displayName}
+                    label={attrib.formName}
                     name={attrib.id}
                     type="text"
                     onChange={(val) => updateField(attrib.id, val.value)}
@@ -123,7 +150,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
             return (
                 <SingleSelectField
                     key={key}
-                    label={attrib.displayName} 
+                    label={attrib.formName} 
                     name={attrib.id} 
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
@@ -165,11 +192,23 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
                 { !editable ? "View" : selectedBed ? "Update" : "Add" } ICU Bed
             </ModalTitle>
             <ModalContent>
-                <div className="form">
-                    {bedAttributes.map((attrib, key) => 
-                        getAttributeInput(attrib, key)
-                    )}
-                </div>
+                {bedAttributes.length > 0 &&
+                    <div className="form">
+                        {infoAttributes.map((attrib, key) => 
+                            getAttributeInput(attrib, key)
+                        )}
+                        
+                        <h4>Facilities</h4>
+                        {facilitiesAttributes.map((attrib, key) => 
+                            getAttributeInput(attrib, key)
+                        )}
+
+                        <h4>Expertise</h4>
+                        {experiseAttrbutes.map((attrib, key) => 
+                            getAttributeInput(attrib, key)
+                        )}
+                    </div>
+                }
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>

@@ -91,7 +91,6 @@ export default function ICUTable({ data, onSelectICU }){
                             AvailableBeds 
                         </DropdownButton> 
                     </TableCellHead>
-                    <TableCellHead >  Contact </TableCellHead>
                 </TableRow>
             </TableHead>
             <TableBody>
@@ -101,11 +100,6 @@ export default function ICUTable({ data, onSelectICU }){
                     <TableCell>{loc.distance}</TableCell>
                     <TableCell>{ loc.total }</TableCell>
                     <TableCell>{loc.available}</TableCell>
-                    <TableCell>
-                        <p>Dr. John Doe</p>
-                        <p>+94771234568</p>
-                        <p>+94717894562</p>
-                    </TableCell>
                 </TableRow>
                 ))}
             </TableBody>

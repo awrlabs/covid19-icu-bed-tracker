@@ -15,11 +15,12 @@ import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
 import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
+import { hasPerm, ACTIONS } from './components/permissionUtils';
 
 function getAttributeByName(bed, name) {
     for (var attrib of bed.attributes) {
@@ -139,6 +140,7 @@ function ViewOrgICU() {
 }
 
 function ViewICUBeds() {
+    const activeUser = useSelector(state => state.app.activeUser);
     const activeOrgUnit = useSelector(state => state.app.activeOrgUnit);
     const activeICU = useSelector(state => state.app.activeICU);
     const metaData = useSelector(state => state.app.metaData);
@@ -147,7 +149,9 @@ function ViewICUBeds() {
     const [showConfigure, setShowConfigure] = useState(false);
     const [bedModalOpen, setBedModalOpen] = useState(false);
     const [patientModalOpen, setPatientModalOpen] = useState(false);
+    const [patientModalAction, setPatientModalAction] = useState("admit");
     const [selectedBed, setSelectedBed] = useState(null);
+    const [eventPerm, setEventPerm] = useState(false);
 
     const dispatch = useDispatch();
     const confirmation = useConfirmation();
@@ -155,6 +159,10 @@ function ViewICUBeds() {
     useEffect(() => {
         if (metaData) {
             dispatch(getICUBeds(activeICU.id, metaData.id));
+            console.log("has perm", hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id));
+            if(hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)){
+                setEventPerm(true);
+            }
         }
     }, [metaData, activeICU.id]);
 
@@ -165,15 +173,19 @@ function ViewICUBeds() {
 
     const onOccupyBed = (bed) => {
         setSelectedBed(bed);
+        setPatientModalAction("admit");
         setPatientModalOpen(true);
         // dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted"));
     }
 
     const onReserveBed = (bed) => {
-        confirmation.show("Do you want to confirm reserving this bed?",
-            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved")),
-            () => { }
-        );
+        // confirmation.show("Do you want to confirm reserving this bed?",
+        //     () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved")),
+        //     () => { }
+        // );
+        setSelectedBed(bed);
+        setPatientModalAction("reserve");
+        setPatientModalOpen(true);
     }
 
     const onDischargeBed = (bed) => {
@@ -189,9 +201,17 @@ function ViewICUBeds() {
 
     return (
         <>
+            <div className="contact">
+                <p><b>Primary Contact</b></p>
+                <p>Dr. John Doe</p>
+                <p>+94771234568</p>
+                <p>+94717894562</p>
+            </div>
             <div className="inner-header">
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
-                <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
+                { hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id) &&  
+                    <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
+                }
             </div>
             {activeICU &&
                 <>
@@ -214,6 +234,7 @@ function ViewICUBeds() {
                                     onOccupy={() => onOccupyBed(bed)}
                                     onDischarge={() => onDischargeBed(bed)}
                                     onReserve={() => onReserveBed(bed)}
+                                    hasEventPerm={eventPerm}
                                 />
                             ))}
                         </div>
@@ -234,6 +255,7 @@ function ViewICUBeds() {
                     open={patientModalOpen}
                     onClose={() => setPatientModalOpen(false)}
                     selectedBed={selectedBed}
+                    actionType={patientModalAction}
                 />
             }
         </>
@@ -328,6 +350,7 @@ function ContainerView({ children }) {
 
     useEffect(() => {
         dispatch(getMetaData());
+        dispatch(getActiveUser());
     }, []);
 
     return (
