@@ -33,6 +33,7 @@ const appSlice = createSlice({
         updateBedStatus(state, action){
             const bedIndex = state.activeICU.beds.findIndex(b => b.trackedEntityInstance === action.payload.bedId);
             state.activeICU.beds[bedIndex].status = action.payload.status;
+            state.activeICU.beds[bedIndex].lastEvent = action.payload.lastEvent;
         },
         updateFilteredICUList(state, action){
             state.icuList = action.payload;
@@ -41,6 +42,7 @@ const appSlice = createSlice({
             const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
             state.icuList[icuIndex].available = action.payload.stat.available;
             state.icuList[icuIndex].total = action.payload.stat.total;
+            state.icuList[icuIndex].name = action.payload.icuName;
         },
         updateICUDistance(state, action){
             const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);

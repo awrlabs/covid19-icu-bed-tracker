@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom'
 import { Popper, ScreenCover } from '@dhis2/ui-core';
 import { hasPerm, ACTIONS } from './permissionUtils';
 
-export default function ICUBed({ name, status, onView, onOccupy, onDischarge, onReserve, hasEventPerm }){
+export default function ICUBed({ 
+    name, status, onView, onOccupy, onDischarge, onReserve, hasEventPerm, onViewPatient, hasEditPerm }){
 
     const ref = useRef(null);
     const [open, setOpen] = useState(false);
@@ -51,6 +52,9 @@ export default function ICUBed({ name, status, onView, onOccupy, onDischarge, on
                                     <div onClick={() => { setOpen(false); onDischarge()}}>Discharge</div>
                                 }
                                 <div onClick={onView}>View</div>
+                                { hasEditPerm && (status === "OCCUPIED" || status === "RESERVED") &&
+                                    <div onClick={onViewPatient}>View Patient</div>
+                                }
                             </div>
                         </Popper>
                     </ScreenCover>,

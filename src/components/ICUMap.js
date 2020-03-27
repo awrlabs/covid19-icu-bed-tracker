@@ -52,12 +52,11 @@ export default function ICUMap(props) {
         }
     }
     let destinations = null;
-
+    let distanceRequest = null;
     if(origin){
-        console.log(origin);
         destinations = data.map(d =>  d.geometry);
         distanceRequest = {
-            origins: [{lat: origin[0], lng: origin[1]}],
+            origins: [{lat: origin[1], lng: origin[0]}],
             destinations: destinations,
             travelMode: 'DRIVING'
         }

@@ -65,7 +65,9 @@ export function getActiveUser(){
                 id: user.id,
                 name: user.displayName,
                 group: user.userGroups.length > 0 ? user.userGroups[0].id : null,
-                organisationUnits: user.organisationUnits.map(ou => ou.id)
+                organisationUnits: user.organisationUnits.map(ou => ou.id),
+                origin: (user.organisationUnits.length > 0 && user.organisationUnits[0].geometry) ? 
+                            user.organisationUnits[0].geometry.coordinates : null
             }))
         }catch(error){
             dispatch(showNotification({
@@ -418,9 +420,16 @@ export function getICUStat(icu, filters = { }){
                         fields: 'trackedEntityInstance',
                         filter: filtersQuery
                     }                    
+                },
+                organisationUnit: {
+                    resource: 'organisationUnits/' + icu.id,
+                    params: {
+                        fields: 'id,displayName,parent[displayName]'
+                    }                    
                 }
             }
             const response = await dhisEngine.query(query);
+
             let stat = {
                 available: 0,
                 total: 0
@@ -445,7 +454,8 @@ export function getICUStat(icu, filters = { }){
 
             dispatch(updateICUStat({
                 icuId: icu.id,
-                stat: stat
+                stat: stat,
+                icuName: `${response.organisationUnit.parent.displayName} - ${response.organisationUnit.displayName}`
             }))
         }catch(error){
             dispatch(showNotification({

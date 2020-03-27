@@ -99,10 +99,12 @@ function ViewOrgICU() {
     const onUpdateDistance = (data, status) => {
         if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
             for(var ind in bedData){
-                dispatch(updateICUDistance({
-                    icuId: bedData[ind].id,
-                    distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
-                }))
+                if(data.rows[0].elements[ind].status === "OK"){
+                    dispatch(updateICUDistance({
+                        icuId: bedData[ind].id,
+                        distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
+                    }))
+                }                
             }            
         }
     }
@@ -142,7 +144,7 @@ function ViewOrgICU() {
                         <ICUMap
                             onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
                             data={bedData}
-                            origin={activeUser.organisationUnits.length > 0 ? activeUser.organisationUnits[0].geometry : null}
+                            origin={activeUser.origin}
                             updateDistance={onUpdateDistance}
                         />
                     </div>
@@ -166,6 +168,7 @@ function ViewICUBeds() {
     const [patientModalAction, setPatientModalAction] = useState("admit");
     const [selectedBed, setSelectedBed] = useState(null);
     const [eventPerm, setEventPerm] = useState(false);
+    const [patientEditable, setPatientEditable] = useState(true);
 
     const dispatch = useDispatch();
     const confirmation = useConfirmation();
@@ -173,7 +176,6 @@ function ViewICUBeds() {
     useEffect(() => {
         if (metaData) {
             dispatch(getICUBeds(activeICU.id, metaData.id));
-            console.log("has perm", hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id));
             if(hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)){
                 setEventPerm(true);
             }
@@ -187,6 +189,7 @@ function ViewICUBeds() {
 
     const onOccupyBed = (bed) => {
         setSelectedBed(bed);
+        setPatientEditable(true);
         setPatientModalAction("admit");
         setPatientModalOpen(true);
         // dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted"));
@@ -198,6 +201,7 @@ function ViewICUBeds() {
         //     () => { }
         // );
         setSelectedBed(bed);
+        setPatientEditable(true);
         setPatientModalAction("reserve");
         setPatientModalOpen(true);
     }
@@ -207,6 +211,12 @@ function ViewICUBeds() {
             () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Discharged")),
             () => { }
         );
+    }
+
+    const onViewPatient = (bed) => {
+        setSelectedBed(bed);
+        setPatientEditable(false);
+        setPatientModalOpen(true);
     }
 
     if (!activeOrgUnit) {
@@ -248,7 +258,9 @@ function ViewICUBeds() {
                                     onOccupy={() => onOccupyBed(bed)}
                                     onDischarge={() => onDischargeBed(bed)}
                                     onReserve={() => onReserveBed(bed)}
+                                    onViewPatient={() => onViewPatient(bed)}
                                     hasEventPerm={eventPerm}
+                                    hasEditPerm={hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)}
                                 />
                             ))}
                         </div>
@@ -270,6 +282,7 @@ function ViewICUBeds() {
                     onClose={() => setPatientModalOpen(false)}
                     selectedBed={selectedBed}
                     actionType={patientModalAction}
+                    editable={patientEditable}
                 />
             }
         </>

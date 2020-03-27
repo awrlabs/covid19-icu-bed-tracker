@@ -31,7 +31,7 @@ const patientFieldset = [
     }    
 ]
 
-export default function RegisterPatientModal({ open, onClose, selectedBed, actionType}){
+export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable}){
 
     const [formState, setFormState] = useState({});
     const dispatch = useDispatch();
@@ -46,11 +46,15 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         let _formState = {};
         for(var field of patientFieldset){
             if(field.type === "TEXT"){
-                _formState[field.id] = "";
+                if(!editable && selectedBed.lastEvent){
+                    _formState[field.id] = selectedBed.lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                }else{
+                    _formState[field.id] = "";
+                }
             }
         }
         setFormState(_formState);
-    }, []);
+    }, [selectedBed]);
 
     const updateField = (field, value) => {
         setFormState({
@@ -68,6 +72,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
+                    disabled={!editable}
                 />
             )
         }
@@ -94,7 +99,14 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     return (
         <Modal open>
             <ModalTitle>
-                { actionType === "admit" ? 'Admit' : 'Reserve' } New Patient
+                
+                {editable && 
+                    <span>{ actionType === "admit" ? 'Admit' : 'Reserve' } New Patient</span>   
+                }
+                {!editable &&
+                    <span>View Patient</span>
+                }
+                
             </ModalTitle>
             <ModalContent>
                 {patientFieldset.map((field, key) => getFormField(field, key))}
@@ -108,13 +120,15 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     >
                         Close
                     </Button>
-                    <Button
-                        onClick={admitPatient}
-                        primary
-                        type="button"
-                    >
-                        Admit Patient
-                    </Button>
+                    {editable && 
+                        <Button
+                            onClick={admitPatient}
+                            primary
+                            type="button"
+                        >
+                            Admit Patient
+                        </Button>
+                    }
                 </ButtonStrip>
             </ModalActions>
         </Modal>
