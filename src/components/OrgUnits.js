@@ -10,10 +10,12 @@ const query = {
         resource: 'organisationUnits.json',
         params: {
             paging: 'false',
-            fields: "id,name,level,children,geometry"
+            fields: "id,name,level,children,geometry,parent[id, displayName]"
         },
     }
 }
+
+let traversalCache = {};
 
 export default function OrgUnits(){
     
@@ -47,8 +49,13 @@ export default function OrgUnits(){
             traverseResults = [];
             traverse(child, 5);
 
+            // traversalCache[child.id] = null;
             if(traverseResults.length > 0){
                 _prunedChildren.push(child);
+                traversalCache[child.id] = {
+                    ...child,
+                    list: [...traverseResults]
+                };
             }
         }
         return _prunedChildren;
@@ -79,7 +86,6 @@ export default function OrgUnits(){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
             root.children = processList(orgData, root.children);
-            
             // mergeLevel(root, 4);
 
             setOrgRoot(root);
@@ -107,7 +113,11 @@ export default function OrgUnits(){
 
         if(root.children){
             for(var child of root.children){
-                traverse(child, level);
+                if(traversalCache[child.id]){
+                    traverseResults = traverseResults.concat(traversalCache[child.id].list)
+                }else{
+                    traverse(child, level);
+                }                
             }
         }
     }
@@ -124,10 +134,11 @@ export default function OrgUnits(){
                 distance: 0,
                 total: null,
                 available: null,
-                geometry: icu.geometry ? 
+                geometry: traversalCache[parent.id] && traversalCache[parent.id].geometry 
+                            && traversalCache[parent.id].geometry.type === "POINT" ? 
                             {
-                                lat: icu.geometry.coordinates[1],
-                                lng: icu.geometry.coordinates[0]
+                                lat: traversalCache[parent.id].geometry.coordinates[1],
+                                lng: traversalCache[parent.id].geometry.coordinates[0]
                             } : {
                                 lat: 0,
                                 lng: 0

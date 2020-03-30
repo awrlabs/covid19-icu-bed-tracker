@@ -144,7 +144,7 @@ function ViewOrgICU() {
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
-                            data={bedData}
+                            data={bedData.map(d => { return { name: d.name, parent: d.parent, geometry: d.geometry } })}
                             origin={activeUser.origin}
                             updateDistance={onUpdateDistance}
                         />

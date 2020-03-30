@@ -22,6 +22,41 @@ export default function ICUMap(props) {
     const { onMarkerClick, data, origin, updateDistance } = props
 
     const [infoWindowData, setInfoWindowData] = useState(infoWindowInitData)
+    const [markerData, setMarkerData] = useState(null);
+    const [distanceRequest, setDistanceRequest] = useState(null);
+
+    useEffect(() => {
+        if(data){
+            if(!markerData){
+                let _markerData = [];
+                let _keys = {};
+
+                for(var d of data){
+                    if(!_keys[d.parent.id]){
+                        _markerData.push({
+                            name: d.parent.displayName,
+                            geometry: d.geometry
+                        })
+                        _keys[d.parent.id] = true;
+                    }
+                }
+
+                let destinations = null;
+                let distanceRequest = null;
+                if(origin){
+                    destinations = _markerData.map(d =>  d.geometry);
+                    distanceRequest = {
+                        origins: [{lat: origin[1], lng: origin[0]}],
+                        destinations: destinations,
+                        travelMode: 'DRIVING'
+                    }
+                }
+
+                setMarkerData(_markerData);
+                setDistanceRequest(distanceRequest);
+            }
+        }
+    }, [data, origin]);
 
     const handleMarkerOnHover = (ICUEntry) => {
         setInfoWindowData({
@@ -51,56 +86,58 @@ export default function ICUMap(props) {
             
         }
     }
-    let destinations = null;
-    let distanceRequest = null;
-    if(origin){
-        destinations = data.map(d =>  d.geometry);
-        distanceRequest = {
-            origins: [{lat: origin[1], lng: origin[0]}],
-            destinations: destinations,
-            travelMode: 'DRIVING'
-        }
-    }
+    // let destinations = null;
+    // let distanceRequest = null;
+    // if(origin){
+    //     destinations = data.map(d =>  d.geometry);
+    //     distanceRequest = {
+    //         origins: [{lat: origin[1], lng: origin[0]}],
+    //         destinations: destinations,
+    //         travelMode: 'DRIVING'
+    //     }
+    // }
 
     return (
         <LoadScript
             id="script-loader"
             googleMapsApiKey="AIzaSyBjlDmwuON9lJbPMDlh_LI3zGpGtpK9erc"
         >
-            <GoogleMap
-                id='example-map'
-                mapContainerStyle={mapContainerStyle}
-                zoom={7.6}
-                center={center}
-            >
-                {data.map((ICUEntry, index) => {
-                    return (
-                        <Marker
-                            position={{ lat: ICUEntry.geometry.lat, lng: ICUEntry.geometry.lng }}
-                            onClick={() => { onMarkerClick(ICUEntry) }}
-                            onMouseOver={() => { handleMarkerOnHover(ICUEntry) }}
-                            onMouseOut={() => { handleMarkerOnHover(infoWindowInitData) }}
-                            options={ICUEntry.available>0?markerAvailableOptions: markerUnavailableOptions}
-                            key={index}
-                        />)
-                })}
-                {infoWindowData.visible &&
-                    <InfoBox
-                        position={infoWindowData}
-                        options={infoBoxOptions}
-                    >
-                        <div
-                            style={{ backgroundColor: 'white', opacity: 0.95, padding: 5 }}
+            {markerData && 
+                <GoogleMap
+                    id='example-map'
+                    mapContainerStyle={mapContainerStyle}
+                    zoom={7.6}
+                    center={center}
+                >
+                    {markerData.map((ICUEntry, index) => {
+                        return (
+                            <Marker
+                                position={{ lat: ICUEntry.geometry.lat, lng: ICUEntry.geometry.lng }}
+                                onClick={() => { onMarkerClick(ICUEntry) }}
+                                onMouseOver={() => { handleMarkerOnHover(ICUEntry) }}
+                                onMouseOut={() => { handleMarkerOnHover(infoWindowInitData) }}
+                                options={markerAvailableOptions}
+                                key={index}
+                            />)
+                    })}
+                    {infoWindowData.visible &&
+                        <InfoBox
+                            position={infoWindowData}
+                            options={infoBoxOptions}
                         >
-                            <div style={{ fontSize: 14, fontColor: `#08233B` }}>
-                                <div>ICU: {infoWindowData.name}</div>
-                                <div>Distance: {infoWindowData.distance}</div>
-                                <div>Beds: {infoWindowData.available}</div>
+                            <div
+                                style={{ backgroundColor: 'white', opacity: 0.95, padding: 5 }}
+                            >
+                                <div style={{ fontSize: 14, fontColor: `#08233B` }}>
+                                    <div>ICU: {infoWindowData.name}</div>
+                                    <div>Distance: {infoWindowData.distance}</div>
+                                    <div>Beds: {infoWindowData.available}</div>
+                                </div>
                             </div>
-                        </div>
-                    </InfoBox>}
-            </GoogleMap>
-            {origin && 
+                        </InfoBox>}
+                </GoogleMap>
+            }
+            {distanceRequest && 
                 <DistanceMatrixService 
                     options={distanceRequest}
                     callback={(data, s) => updateDistance(data, status)}

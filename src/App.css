@@ -16,6 +16,11 @@
     overflow-y: scroll;
 }
 
+.left-column ul{
+    /* min-height: 100vh; */
+    height: inherit !important;
+}
+
 .left-column > div{
     background-color: #21252B;
 }

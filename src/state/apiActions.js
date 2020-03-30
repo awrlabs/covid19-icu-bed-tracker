@@ -425,7 +425,7 @@ export function getICUStat(icu, filters = { }){
                 organisationUnit: {
                     resource: 'organisationUnits/' + icu.id,
                     params: {
-                        fields: 'id,displayName,parent[displayName]'
+                        fields: 'id,displayName,parent[displayName, geometry]'
                     }                    
                 }
             }
