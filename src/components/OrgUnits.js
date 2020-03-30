@@ -45,7 +45,7 @@ export default function OrgUnits(){
         let _prunedChildren = [];
         for(var child of _children){
             traverseResults = [];
-            traverse(child, 6);
+            traverse(child, 5);
 
             if(traverseResults.length > 0){
                 _prunedChildren.push(child);
@@ -79,8 +79,8 @@ export default function OrgUnits(){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
             root.children = processList(orgData, root.children);
-
-            mergeLevel(root, 4);
+            
+            // mergeLevel(root, 4);
 
             setOrgRoot(root);
         }
@@ -100,7 +100,7 @@ export default function OrgUnits(){
     }
 
     function traverse(root, level){
-        if(root.level === level){
+        if(root.level === level && root.name.includes("ICU")){
             traverseResults.push({...root});
             return;
         }
@@ -115,7 +115,7 @@ export default function OrgUnits(){
     const selectOU = (node) => {
         traverseResults = [];
         // traverse the tree and find level 6 bois
-        traverse(node, 6);
+        traverse(node, 5);
 
         let icus = [];
         for(var icu of traverseResults){
@@ -142,7 +142,7 @@ export default function OrgUnits(){
             level: node.level
         }));
 
-        if(node.level === 6){
+        if(node.level === 5){
             dispatch(setActiveICU({
                 id: node.id,
                 beds: []

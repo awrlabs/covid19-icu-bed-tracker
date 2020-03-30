@@ -110,10 +110,9 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
     }
 
     const getAttributeInput = (attribId, key) => {
-        console.log(attribId);
-        console.log(bedAttributes);
+
         const attrib = bedAttributes.find(b => b.id === attribId);
-        console.log(attrib);
+        
         if(attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0){
             return (
                 <SingleSelectField

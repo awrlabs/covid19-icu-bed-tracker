@@ -7,6 +7,7 @@ import {
 import { addBedEvent } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
 import useConfirmation from './useConfirmationHook';
+import { PATIENT_ATTRIBUTES } from '../constants';
 
 const patientFieldset = [
     {
@@ -44,7 +45,8 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
     useEffect(() => {
         let _formState = {};
-        for(var field of patientFieldset){
+        for(var fieldId of PATIENT_ATTRIBUTES){
+            const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
             if(field.type === "TEXT"){
                 if(!editable && selectedBed.lastEvent){
                     _formState[field.id] = selectedBed.lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
@@ -63,12 +65,13 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         })
     }
 
-    const getFormField = (field, key) => {
+    const getFormField = (attrib, key) => {
+        const field = Object.values(metaData.dataElements).find(de => de.id === attrib);
         if(field.type === "TEXT"){
             return (
                 <InputField 
                     key={key}
-                    label={field.label}
+                    label={field.formName}
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
@@ -109,7 +112,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 
             </ModalTitle>
             <ModalContent>
-                {patientFieldset.map((field, key) => getFormField(field, key))}
+                {PATIENT_ATTRIBUTES.map((attrib, key) => getFormField(attrib, key))}
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>
@@ -126,7 +129,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                             primary
                             type="button"
                         >
-                            Admit Patient
+                            { actionType === "admit" ? 'Admit' : 'Reserve' } Patient
                         </Button>
                     }
                 </ButtonStrip>

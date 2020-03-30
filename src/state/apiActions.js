@@ -1,8 +1,7 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-
-const ICU_EVENT = "ICU - Bed Event";
+import { ICU_EVENT_ID } from '../constants';
 
 export function test() {
     return async (dispatch, getState, dhisEngine) => {
@@ -14,17 +13,17 @@ function bedEventHelper(metaData, eventType){
     let dataValue = {};
     if(eventType === "Discharged"){
         dataValue = {
-            dataElement: metaData[ICU_EVENT].id,
+            dataElement: ICU_EVENT_ID,
             value: "Discharged"
         }
     }else if(eventType === "Admitted"){
         dataValue = {
-            dataElement: metaData[ICU_EVENT].id,
+            dataElement: ICU_EVENT_ID,
             value: "Admitted"
         }
     }else if(eventType === "Reserved"){
         dataValue = {
-            dataElement: metaData[ICU_EVENT].id,
+            dataElement: ICU_EVENT_ID,
             value: "Reserved"
         }
     }
@@ -95,7 +94,7 @@ export function getMetaData(){
                     params: {
                         paging: "false",
                         program: "C1wTfmmMQUn",
-                        fields: "id,displayName,optionSet[options[id, displayName,code]]"
+                        fields: "id,displayName,displayFormName,valueType,optionSet[options[id, displayName, code]]"
                     },
                 }
             }
@@ -138,7 +137,9 @@ export function getMetaData(){
                 if(de.displayName.startsWith("ICU")){
                     let elem = {
                         id: de.id,
-                        displayName: de.displayName
+                        displayName: de.displayName,
+                        formName: de.displayFormName,
+                        type: de.valueType
                     }
 
                     if(de.optionSet){
@@ -216,7 +217,7 @@ export function getBedStatus(instanceId){
 
         if(events.length > 0){
             const lastEvent = events[0];
-            const bedEventIndex = lastEvent.dataValues.findIndex(dv => dv.dataElement === getState().app.metaData.dataElements[ICU_EVENT].id);
+            const bedEventIndex = lastEvent.dataValues.findIndex(dv => dv.dataElement === ICU_EVENT_ID);
             
             if(bedEventIndex > -1){
                 switch(lastEvent.dataValues[bedEventIndex].value){

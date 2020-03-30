@@ -21,6 +21,7 @@ import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
+import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES } from './constants';
 
 function getAttributeByName(bed, name) {
     for (var attrib of bed.attributes) {
@@ -79,7 +80,7 @@ function ViewOrgICU() {
         return <p>Please select an organization unit</p>
     }
 
-    if (activeOrgUnit.level === 6) {
+    if (activeOrgUnit.level === 5) {
         return <ViewICUBeds />
     }
 
@@ -223,19 +224,42 @@ function ViewICUBeds() {
         return <p>Please select an organization unit</p>
     }
 
+    const getAttributeText = (bed, attribId, key) => {
+        if(bed.attributes.find(a => a.attribute === attribId).value === "true"){
+            return (
+                <p key={key}>{metaData.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
+            )
+        }
+        return "";
+    }
+
     return (
         <>
-            <div className="contact">
-                <p><b>Primary Contact</b></p>
-                <p>Dr. John Doe</p>
-                <p>+94771234568</p>
-                <p>+94717894562</p>
-            </div>
             <div className="inner-header">
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
                 { hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id) &&  
                     <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
                 }
+            </div>
+            <div className="info">
+                {activeICU.beds.length > 0 && 
+                    <div className="contact">
+                        <p><b>Facilities</b></p>
+                        {FACILITIES_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
+                    </div>
+                }
+                {activeICU.beds.length > 0 && 
+                    <div className="contact">
+                        <p><b>Expertise</b></p>
+                        {EXPERTISE_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
+                    </div>
+                }
+                <div className="contact">
+                    <p><b>Primary Contact</b></p>
+                    <p>Dr. John Doe</p>
+                    <p>+94771234568</p>
+                    <p>+94717894562</p>
+                </div>
             </div>
             {activeICU &&
                 <>

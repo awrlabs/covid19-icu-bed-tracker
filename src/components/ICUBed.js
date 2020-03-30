@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom'
 import { Popper, ScreenCover } from '@dhis2/ui-core';
 import { hasPerm, ACTIONS } from './permissionUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faProcedures } from '@fortawesome/free-solid-svg-icons';
 
 export default function ICUBed({ 
     name, status, onView, onOccupy, onDischarge, onReserve, hasEventPerm, onViewPatient, hasEditPerm }){
@@ -33,6 +35,10 @@ export default function ICUBed({
 
     return (
         <div className={`icu-bed ${getClassName()}`} ref={ref} onClick={onToggle}>
+            <FontAwesomeIcon 
+                icon={faProcedures}
+                size="lg"
+            />
             <span>{name}</span>
             {open && 
                 createPortal(
