@@ -17,6 +17,8 @@ const query = {
 
 let traversalCache = {};
 
+export var parentMatrix = {};
+
 export default function OrgUnits(){
     
     const { loading, error, data, refetch } = useDataQuery(query);
@@ -26,23 +28,32 @@ export default function OrgUnits(){
 
     var traverseResults = [];
 
-    function processList(orgData, children){
+    function processList(orgData, children, parent=null){
         let _children = [];
         for(var child of children){
-            let childOrg = orgData.filter((o) => o.id === child.id);
+            let childOrg = orgData.find((o) => o.id === child.id);
 
-            if(childOrg.length === 1){
-                childOrg = childOrg[0];
-                if(childOrg.children.length === 0){
-                    childOrg.children = null;
-                }else{
-                    childOrg.children = processList(orgData, childOrg.children);
-                }                
-                _children.push({
-                    ...childOrg,
-                    active: false
-                });
-            }            
+            if(!childOrg){
+                continue;
+            }
+            
+            if(parent){
+                if(!parentMatrix[childOrg.id]){
+                    parentMatrix[childOrg.id] = {};
+                }
+                parentMatrix[childOrg.id] = parent.id;
+            }
+
+            if(childOrg.children.length === 0){
+                childOrg.children = null;
+            }else{
+                childOrg.children = processList(orgData, childOrg.children, childOrg);
+            }                
+            _children.push({
+                ...childOrg,
+                active: false
+            });
+            
         }
         let _prunedChildren = [];
         for(var child of _children){
@@ -85,9 +96,8 @@ export default function OrgUnits(){
         if(data){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
-            root.children = processList(orgData, root.children);
+            root.children = processList(orgData, root.children, root);
             // mergeLevel(root, 4);
-
             setOrgRoot(root);
         }
     }, [loading]);
@@ -134,11 +144,11 @@ export default function OrgUnits(){
                 distance: 0,
                 total: null,
                 available: null,
-                geometry: traversalCache[parent.id] && traversalCache[parent.id].geometry 
-                            && traversalCache[parent.id].geometry.type === "POINT" ? 
+                geometry: traversalCache[icu.parent.id] && traversalCache[icu.parent.id].geometry 
+                            && traversalCache[icu.parent.id].geometry.type === "Point" ? 
                             {
-                                lat: traversalCache[parent.id].geometry.coordinates[1],
-                                lng: traversalCache[parent.id].geometry.coordinates[0]
+                                lat: traversalCache[icu.parent.id].geometry.coordinates[1],
+                                lng: traversalCache[icu.parent.id].geometry.coordinates[0]
                             } : {
                                 lat: 0,
                                 lng: 0

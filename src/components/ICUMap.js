@@ -27,18 +27,21 @@ export default function ICUMap(props) {
 
     useEffect(() => {
         if(data){
-            if(!markerData){
+            // if(!markerData){
                 let _markerData = [];
                 let _keys = {};
 
                 for(var d of data){
                     if(!_keys[d.parent.id]){
                         _markerData.push({
+                            id: d.parent.id,
                             name: d.parent.displayName,
-                            geometry: d.geometry
+                            geometry: d.geometry,
+                            icus: []
                         })
                         _keys[d.parent.id] = true;
                     }
+                    _markerData.find(p => p.id === d.parent.id).icus.push(d.name);
                 }
 
                 let destinations = null;
@@ -54,9 +57,9 @@ export default function ICUMap(props) {
 
                 setMarkerData(_markerData);
                 setDistanceRequest(distanceRequest);
-            }
+            // }
         }
-    }, [data, origin]);
+    }, [data.length, origin]);
 
     const handleMarkerOnHover = (ICUEntry) => {
         setInfoWindowData({
@@ -129,9 +132,11 @@ export default function ICUMap(props) {
                                 style={{ backgroundColor: 'white', opacity: 0.95, padding: 5 }}
                             >
                                 <div style={{ fontSize: 14, fontColor: `#08233B` }}>
-                                    <div>ICU: {infoWindowData.name}</div>
-                                    <div>Distance: {infoWindowData.distance}</div>
-                                    <div>Beds: {infoWindowData.available}</div>
+                                    <div>Hospital: {infoWindowData.name}</div>
+                                    <div><b>ICUs</b></div>
+                                    {infoWindowData.icus.map(name => (
+                                        <div>{name}</div>
+                                    ))}
                                 </div>
                             </div>
                         </InfoBox>}
