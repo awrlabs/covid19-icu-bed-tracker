@@ -1,4 +1,5 @@
 import { parentMatrix } from "./OrgUnits";
+import { SUPER_ADMIN_GROUP } from "../constants";
 
 export const ACTIONS = {
     VIEW_ICU : "VIEW_ICU",
@@ -33,26 +34,41 @@ function userHasOrgAccess(orgUnits, icuId){
     return false;
 }
 
+function userHasGroupAccess(groups, accessGroups, accessType){
+    for(var userGroup of groups){
+        if(accessGroups[userGroup]){
+            if(accessType === "READ"){
+                return accessGroups[userGroup].canRead;
+            }
+            if(accessType === "WRITE"){
+                return accessGroups[userGroup].canWrite;
+            }
+        }
+    }
+
+    return false;
+}
+
 export function hasPerm(action, activeUser, programAccess, teAccess, icuId){
-    if(activeUser.group === "LkEkMDG0zfj"){
+    if(activeUser.group.indexOf(SUPER_ADMIN_GROUP) > -1){
         //super user
         return true;
     }
     
     if(action === ACTIONS.VIEW_ICU){
-        if(teAccess[activeUser.group] && teAccess[activeUser.group].canRead){
+        if(userHasGroupAccess(activeUser.group, teAccess, "READ")){
             return true;
         }
     }
 
     if(action === ACTIONS.CONFIG_ICU && userHasOrgAccess(activeUser.organisationUnits, icuId)){
-        if(teAccess[activeUser.group] && teAccess[activeUser.group].canWrite){
+        if(userHasGroupAccess(activeUser.group, teAccess, "WRITE")){
             return true;
         }
     }
 
     if(action === ACTIONS.ADD_EVENT){
-        if(programAccess[activeUser.group] && programAccess[activeUser.group].canWrite 
+        if(userHasGroupAccess(activeUser.group, programAccess, "WRITE") 
             && userHasOrgAccess(activeUser.organisationUnits, icuId)){
             return true;
         }

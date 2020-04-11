@@ -140,3 +140,7 @@
     margin-top: 30px !important;
     margin-bottom: 10px;
 }
+
+div[data-test="dhis2-uicore-card"] {
+    min-width: 200px;
+}

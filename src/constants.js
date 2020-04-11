@@ -23,3 +23,7 @@ export const PATIENT_ATTRIBUTES = [
 ];
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
+
+export const ICU_ORG_UNIT_GROUP = "PTahQgpjqyQ";
+
+export const SUPER_ADMIN_GROUP = "LkEkMDG0zfj";

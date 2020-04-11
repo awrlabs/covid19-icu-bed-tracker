@@ -15,7 +15,7 @@ import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
 import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat, updateICUDistance } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser, getActiveICData } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
@@ -98,15 +98,22 @@ function ViewOrgICU() {
     }
 
     const onUpdateDistance = (data, status) => {
-        if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
-            for(var ind in bedData){
-                if(data.rows[0].elements[ind].status === "OK"){
-                    dispatch(updateICUDistance({
-                        icuId: bedData[ind].id,
-                        distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
-                    }))
-                }                
+        try{
+            if(data){
+                if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
+                    for(var ind in bedData){
+                        if(data.rows[0].elements[ind].status === "OK"){
+                            dispatch(updateICUDistance({
+                                icuId: bedData[ind].id,
+                                distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
+                            }))
+                        }                
+                    }            
+                }
             }            
+        }catch(err){
+            // alot of things can go wrong here
+            // in any case, we ignore the result from distance matrix
         }
     }
 
@@ -121,7 +128,7 @@ function ViewOrgICU() {
                         onChange={({ selected }) => { setFilters({ ...filters, [bedTypeId]: selected }) }}
                     >
                         {bedTypeData && bedTypeData.optionSet.options.map((option, key) => (
-                            <MultiSelectOption key={key} value={option.code} label={option.displayName} />
+                            <MultiSelectOption className="multiselect-bedtype" key={key} value={option.code} label={option.displayName} />
                         ))}
                     </MultiSelect>
                     <MultiSelect
@@ -144,7 +151,7 @@ function ViewOrgICU() {
                     <div className="icu-map">
                         <ICUMap
                             onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
-                            data={bedData.map(d => { return { name: d.name, parent: d.parent, geometry: d.geometry } })}
+                            data={bedData}
                             origin={activeUser.origin}
                             updateDistance={onUpdateDistance}
                         />
@@ -177,6 +184,7 @@ function ViewICUBeds() {
     useEffect(() => {
         if (metaData) {
             dispatch(getICUBeds(activeICU.id, metaData.id));
+            dispatch(getActiveICData(activeICU.id));
             if(hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)){
                 setEventPerm(true);
             }
@@ -256,9 +264,8 @@ function ViewICUBeds() {
                 }
                 <div className="contact">
                     <p><b>Primary Contact</b></p>
-                    <p>Dr. John Doe</p>
-                    <p>+94771234568</p>
-                    <p>+94717894562</p>
+                    <p>{activeICU.contactPerson ? activeICU.contactPerson : "No contact person listed"}</p>
+                    <p>{activeICU.contactNumber ? activeICU.contactNumber : "No contact number listed"}</p>
                 </div>
             </div>
             {activeICU &&

@@ -29,6 +29,7 @@ export default function ICUMap(props) {
         if(data){
             // if(!markerData){
                 let _markerData = [];
+                let _destinationData = [];
                 let _keys = {};
 
                 for(var d of data){
@@ -42,15 +43,16 @@ export default function ICUMap(props) {
                         _keys[d.parent.id] = true;
                     }
                     _markerData.find(p => p.id === d.parent.id).icus.push(d.name);
+                    _destinationData.push(d.geometry);
                 }
 
                 let destinations = null;
                 let distanceRequest = null;
                 if(origin){
-                    destinations = _markerData.map(d =>  d.geometry);
+                    // destinations = _markerData.map(d =>  d.geometry);
                     distanceRequest = {
                         origins: [{lat: origin[1], lng: origin[0]}],
-                        destinations: destinations,
+                        destinations: _destinationData,
                         travelMode: 'DRIVING'
                     }
                 }
@@ -71,11 +73,12 @@ export default function ICUMap(props) {
     const infoBoxOptions = { closeBoxURL: '' };
     const markerAvailableOptions = {
         icon:{
-            path:'M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.5 17.7 30.6 17.7 30.6s17.7-15.4 17.7-30.6c0-9.6-7.9-17.4-17.7-17.4z',
-            fillColor: '#00802b',
+            path:'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -2,-30 a 2,2 0 1,1 4,0 2,2 0 1,1 -4,0',
+            fillColor: 'green',
             fillOpacity: 1,
-            strokeColor: '',
-            strokeWeight: 0
+            strokeColor: '#000',
+            strokeWeight: 1,
+            scale: 1
             
         }
     }
@@ -125,7 +128,7 @@ export default function ICUMap(props) {
                     })}
                     {infoWindowData.visible &&
                         <InfoBox
-                            position={infoWindowData}
+                            position={{ lat: infoWindowData.geometry.lat, lng: infoWindowData.geometry.lng }}
                             options={infoBoxOptions}
                         >
                             <div
@@ -145,7 +148,7 @@ export default function ICUMap(props) {
             {distanceRequest && 
                 <DistanceMatrixService 
                     options={distanceRequest}
-                    callback={(data, s) => updateDistance(data, status)}
+                    callback={(data, status) => updateDistance(data, status)}
                 />
             }
         </LoadScript >

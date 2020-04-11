@@ -1,4 +1,4 @@
-import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser } from './appState';
+import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 import { ICU_EVENT_ID } from '../constants';
@@ -63,9 +63,10 @@ export function getActiveUser(){
             dispatch(setActiveUser({
                 id: user.id,
                 name: user.displayName,
-                group: user.userGroups.length > 0 ? user.userGroups[0].id : null,
+                group: user.userGroups.length > 0 ? user.userGroups.map(ug => ug.id) : null,
                 organisationUnits: user.organisationUnits.map(ou => ou.id),
-                origin: (user.organisationUnits.length > 0 && user.organisationUnits[0].geometry) ? 
+                origin: (user.organisationUnits.length > 0 && user.organisationUnits[0].geometry 
+                            && user.organisationUnits[0].geometry.type === "Point" ) ? 
                             user.organisationUnits[0].geometry.coordinates : null
             }))
         }catch(error){
@@ -425,7 +426,7 @@ export function getICUStat(icu, filters = { }){
                 organisationUnit: {
                     resource: 'organisationUnits/' + icu.id,
                     params: {
-                        fields: 'id,displayName,parent[displayName, geometry]'
+                        fields: 'id,displayName,parent[displayName, geometry],contactPerson,phoneNumber'
                     }                    
                 }
             }
@@ -456,7 +457,9 @@ export function getICUStat(icu, filters = { }){
             dispatch(updateICUStat({
                 icuId: icu.id,
                 stat: stat,
-                icuName: `${response.organisationUnit.parent.displayName} - ${response.organisationUnit.displayName}`
+                icuName: `${response.organisationUnit.parent.displayName} - ${response.organisationUnit.displayName}`,
+                contactPerson: response.organisationUnit.contactPerson,
+                contactNumber: response.organisationUnit.phoneNumber
             }))
         }catch(error){
             dispatch(showNotification({
@@ -467,3 +470,31 @@ export function getICUStat(icu, filters = { }){
         }
     }
 }
+
+export function getActiveICData(icuId){
+    return async (dispatch, getState, dhisEngine) => {
+        try{
+            const query  = {
+                organisationUnit: {
+                    resource: 'organisationUnits/' + icuId,
+                    params: {
+                        fields: 'id,contactPerson,phoneNumber'
+                    }                    
+                }
+            }
+            const response = await dhisEngine.query(query);
+
+            dispatch(updateActiveICUData({        
+                icuId: icuId,        
+                contactPerson: response.organisationUnit.contactPerson,
+                contactNumber: response.organisationUnit.phoneNumber
+            }))
+        }catch(error){
+            dispatch(showNotification({
+                message:'error in retrieving ICU data',
+                type:'error'
+            }))
+            console.log("Error in creating:", error)
+        }
+    }
+} 

@@ -4,15 +4,20 @@ import { useDispatch } from 'react-redux';
 import { DataQuery, useDataQuery } from '@dhis2/app-runtime'
 import { Treebeard } from 'react-treebeard';
 import { setActiveOrgUnit, updateFilteredICUList, setActiveICU } from '../state/appState';
+import { ICU_ORG_UNIT_GROUP } from '../constants';
 
 const query = {
     organisationUnits: {
         resource: 'organisationUnits.json',
         params: {
             paging: 'false',
-            fields: "id,name,level,children,geometry,parent[id, displayName]"
+            fields: "id,name,level,children,geometry,organisationUnitGroups,parent[id, displayName]"
         },
     }
+}
+
+function orgSort(x, y){
+    return x.name.localeCompare(y.name);
 }
 
 let traversalCache = {};
@@ -69,7 +74,7 @@ export default function OrgUnits(){
                 };
             }
         }
-        return _prunedChildren;
+        return _prunedChildren.sort(orgSort);
     }
 
     function mergeLevel(node, level=4){
@@ -97,6 +102,7 @@ export default function OrgUnits(){
             const orgData = data.organisationUnits.organisationUnits;
             const root = data.organisationUnits.organisationUnits.filter((o) => o.level === 1)[0];
             root.children = processList(orgData, root.children, root);
+            parentMatrix[root.id] = "";
             // mergeLevel(root, 4);
             setOrgRoot(root);
         }
@@ -116,7 +122,7 @@ export default function OrgUnits(){
     }
 
     function traverse(root, level){
-        if(root.level === level && root.name.includes("ICU")){
+        if(root.level === level && root.organisationUnitGroups.findIndex(g => g.id === ICU_ORG_UNIT_GROUP) > -1){
             traverseResults.push({...root});
             return;
         }

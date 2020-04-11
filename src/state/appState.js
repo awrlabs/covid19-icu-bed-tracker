@@ -41,24 +41,35 @@ const appSlice = createSlice({
             state.icuList = action.payload;
         },
         updateICUStat(state, action){
-            const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
-            if(icuIndex > -1){
-                state.icuList[icuIndex].available = action.payload.stat.available;
-                state.icuList[icuIndex].total = action.payload.stat.total;
-                state.icuList[icuIndex].name = action.payload.icuName;
-            }            
+            const icu = state.icuList.find(i => i.id === action.payload.icuId);
+
+            if(icu){
+                Object.assign(icu, {
+                    available: action.payload.stat.available,
+                    total: action.payload.stat.total,
+                    name: action.payload.icuName,
+                });
+            }          
         },
         updateICUDistance(state, action){
             const icuIndex = state.icuList.findIndex(i => i.id === action.payload.icuId);
             if(icuIndex > -1){
                 state.icuList[icuIndex].distance = action.payload.distance;
             }            
+        },
+        updateActiveICUData(state, action){
+            if(state.activeICU && state.activeICU.id === action.payload.icuId){
+                Object.assign(state.activeICU, {
+                    contactPerson: action.payload.contactPerson,
+                    contactNumber: action.payload.contactNumber
+                });
+            }
         }
     }
 })
 
 export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, 
                updateBedStatus, updateFilteredICUList, updateICUStat,
-               setActiveUser, updateICUDistance
+               setActiveUser, updateICUDistance, updateActiveICUData
             } = appSlice.actions;
 export default appSlice.reducer;
