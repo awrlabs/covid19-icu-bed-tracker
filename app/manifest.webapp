@@ -1,7 +1,7 @@
 {
   "appType": "APP",
   "short_name": "icu-bed-tracker",
-  "name": "icu-bed-tracker",
+  "name": "National Intensive Care Network",
   "description": "",
   "version": "1.0.0",
   "launch_path": "index.html",
@@ -14,7 +14,7 @@
   "icons": {
     "48": "dhis2-app-icon.png"
   },
-  "manifest_generated_at": "Sat Apr 11 2020 12:18:51 GMT+0530 (India Standard Time)",
+  "manifest_generated_at": "Tue Apr 14 2020 16:17:46 GMT+0530 (India Standard Time)",
   "display": "standalone",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
