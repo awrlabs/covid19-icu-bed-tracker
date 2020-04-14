@@ -94,14 +94,21 @@ export default function ICUTable({ data, onSelectICU }){
                 </TableRow>
             </TableHead>
             <TableBody>
-                {locationData.map((loc, key) => (
-                <TableRow key={key}>
-                    <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name}</a></TableCell>
-                    <TableCell>{loc.distance}</TableCell>
-                    <TableCell>{ loc.total }</TableCell>
-                    <TableCell>{loc.available}</TableCell>
-                </TableRow>
-                ))}
+                {locationData.map((loc, key) => {
+                
+                if(loc.total === 0){
+                    return "";
+                }
+
+                return(
+                    <TableRow key={key}>
+                        <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name}</a></TableCell>
+                        <TableCell>{loc.distance}</TableCell>
+                        <TableCell>{ loc.total }</TableCell>
+                        <TableCell>{loc.available}</TableCell>
+                    </TableRow>
+                )
+                })}
             </TableBody>
         </Table>
     )

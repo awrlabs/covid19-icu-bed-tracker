@@ -48,6 +48,7 @@ const appSlice = createSlice({
                     available: action.payload.stat.available,
                     total: action.payload.stat.total,
                     name: action.payload.icuName,
+                    isLoading: false
                 });
             }          
         },
@@ -64,12 +65,17 @@ const appSlice = createSlice({
                     contactNumber: action.payload.contactNumber
                 });
             }
+        },
+        updateICUStatRequest(state, action){
+            const icu = state.icuList.find(i => i.id === action.payload.icuId);
+            icu.isLoading = true;
         }
     }
 })
 
 export const { setActiveOrgUnit, setActiveICU, setMetaData, setICUBeds, 
                updateBedStatus, updateFilteredICUList, updateICUStat,
-               setActiveUser, updateICUDistance, updateActiveICUData
+               setActiveUser, updateICUDistance, updateActiveICUData,
+               updateICUStatRequest
             } = appSlice.actions;
 export default appSlice.reducer;

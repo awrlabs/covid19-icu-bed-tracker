@@ -38,6 +38,8 @@ function ViewOrgICU() {
     const activeUser = useSelector(state => state.app.activeUser);
     const bedData = useSelector(state => state.app.icuList);
     const metaData = useSelector(state => state.app.metaData);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isMapLoading, setIsMapLoading] = useState(true);
 
     const dispatch = useDispatch();
 
@@ -65,6 +67,16 @@ function ViewOrgICU() {
                     }));
                 }
             }
+
+            let _isLoading = false;
+            setIsMapLoading(true);
+            for (var icu of bedData) {
+                if(icu.isLoading){
+                    _isLoading = true;
+                    break;
+                }
+            }
+            setIsLoading(_isLoading);
         }
     }, [bedData]);
 
@@ -98,6 +110,7 @@ function ViewOrgICU() {
     }
 
     const onUpdateDistance = (data, status) => {
+        console.log(data);  
         try{
             if(data){
                 if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
@@ -115,6 +128,8 @@ function ViewOrgICU() {
             // alot of things can go wrong here
             // in any case, we ignore the result from distance matrix
         }
+        console.log("herere");
+        setIsMapLoading(false);
     }
 
     return (
@@ -141,22 +156,38 @@ function ViewOrgICU() {
                         ))}
                     </MultiSelect>
                 </div>
+                
+                
                 <div className="icu-org">
-                    <div className="icu-table">
-                        <ICUTable
-                            data={bedData}
-                            onSelectICU={onSelectICU}
-                        />
-                    </div>
-                    <div className="icu-map">
-                        <ICUMap
-                            onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
-                            data={bedData}
-                            origin={activeUser.origin}
-                            updateDistance={onUpdateDistance}
-                        />
-                    </div>
+                    { (isLoading || isMapLoading) && 
+                        <div className="icu-table">
+                            <p>Loading ICU stat, please wait...</p>
+                            {/* <ICUTable
+                                    data={[]}
+                                    onSelectICU={onSelectICU}
+                                /> */}
+                        </div>
+                    }
+                    {!(isLoading || isMapLoading) && 
+                        <div className="icu-table">
+                            <ICUTable
+                                data={bedData}
+                                onSelectICU={onSelectICU}
+                            />
+                        </div>
+                    }
+                    {!isLoading && 
+                        <div className="icu-map">
+                            <ICUMap
+                                onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
+                                data={bedData.filter(bed => bed.total !== 0)}
+                                origin={activeUser.origin}
+                                updateDistance={onUpdateDistance}
+                            />
+                        </div>
+                    }
                 </div>
+                
             </>
         )
     )

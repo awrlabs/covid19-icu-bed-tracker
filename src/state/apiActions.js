@@ -1,4 +1,4 @@
-import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData } from './appState';
+import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 import { ICU_EVENT_ID } from '../constants';
@@ -395,6 +395,7 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
 export function getICUStat(icu, filters = { }){
     return async (dispatch, getState, dhisEngine) => {
         try{
+            dispatch(updateICUStatRequest({ icuId: icu.id }));
             let filtersQuery = "";
             for(var filter in filters){
                 if(filters[filter].length === 0){

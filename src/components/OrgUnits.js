@@ -158,7 +158,8 @@ export default function OrgUnits(){
                             } : {
                                 lat: 0,
                                 lng: 0
-                            }
+                            },
+                isLoading: true
             })
         }
         dispatch(updateFilteredICUList(icus));
