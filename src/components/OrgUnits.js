@@ -182,7 +182,7 @@ export default function OrgUnits() {
                 beds: []
             }))
         } else {
-            let icus = getICUsForParent(node.id);
+            let icus = getICUsForParent(node.id, {});
             dispatch(updateFilteredICUList(icus));
             console.log("ICUs for parent", icus);
         }

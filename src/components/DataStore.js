@@ -9,35 +9,67 @@ let fdb = new ForerunnerDB();
 let bedsDb = fdb.db("beds");
 let bedsCollection = bedsDb.collection("beds", { primaryKey: "trackedEntityInstance" });
 let bedEventsCollection = bedsDb.collection("bedEvents", { primaryKey: "event" });
-let icusCollection = bedsDb.collection("icus", { primaryKey: "orgUnit" });
+let icusCollection = bedsDb.collection("icus", { primaryKey: "id" });
 
 //for debug
 window.bc = bedsCollection;
 window.ebc = bedEventsCollection;
+window.ic = icusCollection;
 
 // /bc.find({},{$join:[{"bedEvents":{"trackedEntityInstance":"trackedEntityInstance",$as:"events",$require:false,$multi:true}}]})
 
 export function queryForICU(icuId, filters) {
+    //console.log("Filters", filters);
+
     let total = bedsCollection.count({
         orgUnit: {
             $eq: icuId
         }
     });
+
+    let availableBeds = bedEventsCollection.find({
+        dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
+    }).map(bed => bed.trackedEntityInstance);
+
+    let dbFilters = {};
+
+    Object.keys(filters).forEach(k => {
+        if (filters[k].length > 0) {
+            dbFilters[k] = {
+                $in: filters[k].map(fk => fk.value)
+            }
+        }
+    });
+
+    //console.log("DB Filters", dbFilters, filters);
+
+
     let available = bedsCollection.count({
         orgUnit: {
             $eq: icuId
         },
-        events: {
-            dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
-        }
-    }, { $join: [{ "bedEvents": { "trackedEntityInstance": "trackedEntityInstance", $as: "events", $require: false, $multi: true } }] })
+        trackedEntityInstance: {
+            $in: availableBeds
+        },
+        ...dbFilters
+        // },
+        // events: {
+        //     dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
+        // }
+    });
+
+    // , { $join: [{ "bedEvents": { "trackedEntityInstance": "trackedEntityInstance", $as: "events", $require: false, $multi: true } }] }
+
     let orgUnit = icusCollection.find({ id: { $eq: icuId } })[0];
     //console.log("Results", available, total, orgUnit);
     return { available, total, orgUnit };
 }
 
-export function getICUsForParent(parentId) {
-    return [...icusCollection.find({ parents: { $eq: parentId } })];
+export function getICUsForParent(parentId, filters) {
+    //console.log("Query for parent", parentId);
+    return icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
+        return { ...icu, ...queryForICU(icu.id, filters) }
+    }).filter(icu => icu.available > 0);
 }
 
 export function getICUPaths() {
@@ -68,7 +100,7 @@ export default function DataStore({ children }) {
             resource: 'trackedEntityInstances',
             params: {
                 ouMode: "ACCESSIBLE",
-                fields: "trackedEntityInstance,attributes[attribute,displayName,value],orgUnit",
+                fields: "trackedEntityInstance,attributes[attribute,value],orgUnit",
                 program: PROGRAM,
                 paging: "false"
             },
@@ -111,8 +143,18 @@ export default function DataStore({ children }) {
                 }
             });
 
+            console.log("Adding ", icus.length, "ICUs");
+
             Promise.all([
-                asyncInsert(bedsCollection, data.beds.trackedEntityInstances),
+                asyncInsert(
+                    bedsCollection, data.beds.trackedEntityInstances.map(te => {
+                        te.attributes && te.attributes.forEach(at => {
+                            te[at.attribute] = at.value;
+                        });
+                        delete te.attributes;
+                        return te;
+                    })
+                ),
                 asyncInsert(bedEventsCollection, data.bedEvents.events),
                 asyncInsert(icusCollection, icus),
             ]).then(() => {

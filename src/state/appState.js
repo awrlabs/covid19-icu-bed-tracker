@@ -14,6 +14,7 @@ const appSlice = createSlice({
     initialState: initState,
     reducers: {
         setActiveOrgUnit(state, action){
+            console.log("Setting active orgunit", action);
             state.activeOrgUnit = action.payload;
         },
         setActiveICU(state, action){

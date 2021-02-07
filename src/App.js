@@ -13,7 +13,7 @@ import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat, updateICUDistance } from './state/appState';
+import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat, updateICUDistance, updateFilteredICUList } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser, getActiveICData } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
@@ -22,7 +22,7 @@ import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
 import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM } from './constants';
-import DataStore from "./components/DataStore";
+import DataStore, { getICUsForParent } from "./components/DataStore";
 
 function getAttributeByName(bed, name) {
     for (var attrib of bed.attributes) {
@@ -40,7 +40,6 @@ function ViewOrgICU() {
     const bedData = useSelector(state => state.app.icuList);
     const metaData = useSelector(state => state.app.metaData);
     const [isLoading, setIsLoading] = useState(true);
-    const [isMapLoading, setIsMapLoading] = useState(true);
 
     const dispatch = useDispatch();
 
@@ -70,7 +69,6 @@ function ViewOrgICU() {
             }
 
             let _isLoading = false;
-            setIsMapLoading(false);
             for (var icu of bedData) {
                 if (icu.isLoading) {
 
@@ -85,10 +83,9 @@ function ViewOrgICU() {
     }, [bedData]);
 
     useEffect(() => {
-        if (bedData) {
-            for (var icu of bedData) {
-                dispatch(getICUStat(icu, filters));
-            }
+        if (activeOrgUnit) {
+            let icus = getICUsForParent(activeOrgUnit.id, filters);
+            dispatch(updateFilteredICUList(icus));
         }
     }, [filters]);
 
@@ -111,29 +108,6 @@ function ViewOrgICU() {
             id: icu.id,
             beds: []
         }))
-    }
-
-    const onUpdateDistance = (data, status) => {
-        console.log(data);
-        try {
-            if (data) {
-                if (data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length) {
-                    for (var ind in bedData) {
-                        if (data.rows[0].elements[ind].status === "OK") {
-                            dispatch(updateICUDistance({
-                                icuId: bedData[ind].id,
-                                distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})`
-                            }))
-                        }
-                    }
-                }
-            }
-        } catch (err) {
-            // alot of things can go wrong here
-            // in any case, we ignore the result from distance matrix
-        }
-        console.log("herere");
-        setIsMapLoading(false);
     }
 
     return (
@@ -163,7 +137,7 @@ function ViewOrgICU() {
 
 
                 <div className="icu-org">
-                    {(isLoading || isMapLoading) &&
+                    {(isLoading) &&
                         <div className="icu-table">
                             <p>Loading ICU stat, please wait...</p>
                             {/* <ICUTable
@@ -172,7 +146,7 @@ function ViewOrgICU() {
                                 /> */}
                         </div>
                     }
-                    {!(isLoading || isMapLoading) &&
+                    {!(isLoading) &&
                         <div className="icu-table">
                             <ICUTable
                                 data={bedData}
@@ -187,7 +161,6 @@ function ViewOrgICU() {
                                 // data={bedData.filter(bed => bed.total !== 0)}
                                 data={bedData}
                                 origin={activeUser.origin}
-                                updateDistance={onUpdateDistance}
                             />
                         </div>
                     }
