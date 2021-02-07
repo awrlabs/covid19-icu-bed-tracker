@@ -5,7 +5,7 @@ const config = {
         app: './src/App',
     },
 
-    title: "National Intensive Care Network"
+    title: "National Intensive Care Network V2"
 }
 
 module.exports = config

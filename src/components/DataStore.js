@@ -65,11 +65,11 @@ export function queryForICU(icuId, filters) {
     return { available, total, orgUnit };
 }
 
-export function getICUsForParent(parentId, filters) {
+export function getICUsForParent(parentId, filters, callback) {
     //console.log("Query for parent", parentId);
-    return icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
+    callback(icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
         return { ...icu, ...queryForICU(icu.id, filters) }
-    }).filter(icu => icu.available > 0);
+    }).filter(icu => icu.available > 0));
 }
 
 export function getICUPaths() {
@@ -156,7 +156,10 @@ export default function DataStore({ children }) {
                     })
                 ),
                 asyncInsert(bedEventsCollection, data.bedEvents.events),
-                asyncInsert(icusCollection, icus),
+                asyncInsert(icusCollection, icus.map(icu => {
+                    icu.name = icu.parent.displayName + " - " + icu.displayName;
+                    return icu;
+                })),
             ]).then(() => {
                 setDataLoading(false);
             });

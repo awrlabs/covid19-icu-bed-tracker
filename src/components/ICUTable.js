@@ -103,7 +103,7 @@ export default function ICUTable({ data, onSelectICU }) {
                     let dstInKm = parseInt(distance.dt / 1000);
                     return (
                         <TableRow key={key}>
-                            <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{generateICUName(loc)} </a></TableCell>
+                            <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name} </a></TableCell>
                             <TableCell>
                                 <div className="distance-cell">
                                     <div>

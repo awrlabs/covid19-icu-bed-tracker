@@ -106,7 +106,7 @@ export default function OrgUnits() {
             var start = new Date().getTime();
             root.children = processList(orgData, root.children, root);
             var end = new Date().getTime();
-            console.log('Execution time: ' + (end-start));
+            console.log('Execution time: ' + (end - start));
             parentMatrix[root.id] = "";
             // mergeLevel(root, 4);
             setOrgRoot(root);
@@ -182,9 +182,10 @@ export default function OrgUnits() {
                 beds: []
             }))
         } else {
-            let icus = getICUsForParent(node.id, {});
-            dispatch(updateFilteredICUList(icus));
-            console.log("ICUs for parent", icus);
+            getICUsForParent(node.id, {}, (icus) => {
+                dispatch(updateFilteredICUList(icus));
+                console.log("ICUs for parent", icus);
+            });
         }
 
     }

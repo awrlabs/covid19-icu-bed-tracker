@@ -84,8 +84,10 @@ function ViewOrgICU() {
 
     useEffect(() => {
         if (activeOrgUnit) {
-            let icus = getICUsForParent(activeOrgUnit.id, filters);
-            dispatch(updateFilteredICUList(icus));
+            console.log("Active user",activeUser);
+            getICUsForParent(activeOrgUnit.id, filters, (icus) => {
+                dispatch(updateFilteredICUList(icus));
+            });
         }
     }, [filters]);
 
