@@ -21,7 +21,8 @@ import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
-import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES } from './constants';
+import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM } from './constants';
+import DataStore from "./components/DataStore";
 
 function getAttributeByName(bed, name) {
     for (var attrib of bed.attributes) {
@@ -69,13 +70,16 @@ function ViewOrgICU() {
             }
 
             let _isLoading = false;
-            setIsMapLoading(true);
+            setIsMapLoading(false);
             for (var icu of bedData) {
-                if(icu.isLoading){
-                    _isLoading = true;
+                if (icu.isLoading) {
+
+                    console.log("ICU loading", icu);
+                    //_isLoading = true;
                     break;
                 }
             }
+            //console.log("Setting loading", _isLoading, bedData);
             setIsLoading(_isLoading);
         }
     }, [bedData]);
@@ -100,7 +104,7 @@ function ViewOrgICU() {
         dispatch(setActiveOrgUnit({
             id: icu.id,
             name: icu.name,
-            level: icu.level
+            level: 5
         }));
 
         dispatch(setActiveICU({
@@ -110,21 +114,21 @@ function ViewOrgICU() {
     }
 
     const onUpdateDistance = (data, status) => {
-        console.log(data);  
-        try{
-            if(data){
-                if(data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length){
-                    for(var ind in bedData){
-                        if(data.rows[0].elements[ind].status === "OK"){
+        console.log(data);
+        try {
+            if (data) {
+                if (data.rows && data.rows.length > 0 && data.rows[0].elements && data.rows[0].elements.length === bedData.length) {
+                    for (var ind in bedData) {
+                        if (data.rows[0].elements[ind].status === "OK") {
                             dispatch(updateICUDistance({
                                 icuId: bedData[ind].id,
-                                distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})` 
+                                distance: `${data.rows[0].elements[ind].distance.text} (${data.rows[0].elements[ind].duration.text})`
                             }))
-                        }                
-                    }            
+                        }
+                    }
                 }
-            }            
-        }catch(err){
+            }
+        } catch (err) {
             // alot of things can go wrong here
             // in any case, we ignore the result from distance matrix
         }
@@ -156,10 +160,10 @@ function ViewOrgICU() {
                         ))}
                     </MultiSelect>
                 </div>
-                
-                
+
+
                 <div className="icu-org">
-                    { (isLoading || isMapLoading) && 
+                    {(isLoading || isMapLoading) &&
                         <div className="icu-table">
                             <p>Loading ICU stat, please wait...</p>
                             {/* <ICUTable
@@ -168,7 +172,7 @@ function ViewOrgICU() {
                                 /> */}
                         </div>
                     }
-                    {!(isLoading || isMapLoading) && 
+                    {!(isLoading || isMapLoading) &&
                         <div className="icu-table">
                             <ICUTable
                                 data={bedData}
@@ -176,18 +180,19 @@ function ViewOrgICU() {
                             />
                         </div>
                     }
-                    {!isLoading && 
+                    {!isLoading &&
                         <div className="icu-map">
                             <ICUMap
                                 onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
-                                data={bedData.filter(bed => bed.total !== 0)}
+                                // data={bedData.filter(bed => bed.total !== 0)}
+                                data={bedData}
                                 origin={activeUser.origin}
                                 updateDistance={onUpdateDistance}
                             />
                         </div>
                     }
                 </div>
-                
+
             </>
         )
     )
@@ -216,7 +221,7 @@ function ViewICUBeds() {
         if (metaData) {
             dispatch(getICUBeds(activeICU.id, metaData.id));
             dispatch(getActiveICData(activeICU.id));
-            if(hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)){
+            if (hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)) {
                 setEventPerm(true);
             }
         }
@@ -264,7 +269,7 @@ function ViewICUBeds() {
     }
 
     const getAttributeText = (bed, attribId, key) => {
-        if(bed.attributes.find(a => a.attribute === attribId).value === "true"){
+        if (bed.attributes.find(a => a.attribute === attribId).value === "true") {
             return (
                 <p key={key}>{metaData.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
             )
@@ -276,18 +281,18 @@ function ViewICUBeds() {
         <>
             <div className="inner-header">
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
-                { hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id) &&  
+                {hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id) &&
                     <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
                 }
             </div>
             <div className="info">
-                {activeICU.beds.length > 0 && 
+                {activeICU.beds.length > 0 &&
                     <div className="contact">
                         <p><b>Facilities</b></p>
                         {FACILITIES_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
                     </div>
                 }
-                {activeICU.beds.length > 0 && 
+                {activeICU.beds.length > 0 &&
                     <div className="contact">
                         <p><b>Expertise</b></p>
                         {EXPERTISE_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
@@ -463,31 +468,38 @@ function MyApp() {
         middleware: customizedMiddleware
     })
 
+    // useEffect(()=>{
+    //     console.log("USe Effect");
+    //     DataStore.load();
+    // });
+
     return (
         <Provider store={store}>
-            <ContainerView>
-                <div className="container">
-                    <div className="left-column">
-                        <OrgUnits />
+            <DataStore>
+                <ContainerView>
+                    <div className="container">
+                        <div className="left-column">
+                            <OrgUnits />
+                        </div>
+                        <div className="right-column">
+                            <ViewOrgICU />
+                            {/* <ViewICUBeds /> */}
+                            {/* <ViewConfigureBeds /> */}
+                        </div>
                     </div>
-                    <div className="right-column">
-                        <ViewOrgICU />
-                        {/* <ViewICUBeds /> */}
-                        {/* <ViewConfigureBeds /> */}
+                    <div
+                        style={{
+                            bottom: 0,
+                            left: 0,
+                            paddingLeft: 16,
+                            position: 'fixed',
+                            width: '60%'
+                        }}
+                    >
+                        <Notification />
                     </div>
-                </div>
-                <div
-                    style={{
-                        bottom: 0,
-                        left: 0,
-                        paddingLeft: 16,
-                        position: 'fixed',
-                        width: '60%'
-                    }}
-                >
-                    <Notification/>
-                </div>
-            </ContainerView>
+                </ContainerView>
+            </DataStore>
         </Provider>
     )
 }

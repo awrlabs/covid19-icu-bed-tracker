@@ -19,7 +19,7 @@ export const PATIENT_ATTRIBUTES = [
     "j1hbO7zzRgV",
     "sK09QRLNyAA",
     "malZQqUEzi9",
-    "qh9bc6jlauE"    
+    "qh9bc6jlauE"
 ];
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
@@ -27,3 +27,5 @@ export const ICU_EVENT_ID = "MtYPOv0wqCg";
 export const ICU_ORG_UNIT_GROUP = "PTahQgpjqyQ";
 
 export const SUPER_ADMIN_GROUP = "LkEkMDG0zfj";
+
+export const PROGRAM = "C1wTfmmMQUn";

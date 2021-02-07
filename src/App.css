@@ -6,14 +6,14 @@
     width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: row;
     font-size: 1rem;
-    padding-bottom: 50px;
+    display:grid;
+    grid-template-columns: 300px auto;
 }
 
 .left-column{
-    width: 250px;
     overflow-y: scroll;
+    background-color: #21252B;
 }
 
 .left-column ul{
@@ -22,7 +22,7 @@
 }
 
 .left-column > div{
-    background-color: #21252B;
+    
 }
 
 .right-column{
@@ -143,4 +143,13 @@
 
 div[data-test="dhis2-uicore-card"] {
     min-width: 200px;
+}
+
+.distance-cell{
+    display:grid;
+    grid-template-rows: auto auto;
+}
+
+.distance-cell-time{
+    font-size: smaller;
 }
