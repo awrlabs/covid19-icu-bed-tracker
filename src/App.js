@@ -6,7 +6,7 @@ import OrgUnits from './components/OrgUnits'
 import './App.css';
 import {
     Card, MultiSelect, MultiSelectOption, MultiSelectField, Button, ButtonStrip,
-    Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,CircularLoader
+    Table, TableHead, TableBody, TableRow, TableCellHead, TableCell, CircularLoader
 } from '@dhis2/ui-core';
 import ICUTable from './components/ICUTable';
 import { rootReducer } from './state/store';
@@ -43,14 +43,20 @@ function ViewOrgICU() {
     const dispatch = useDispatch();
 
     const covidTypeId = ATT_COVID_TYPE;
-    let bedTypeData = null
-    let covidTypeData = null
+    let bedTypeData = null;
+    let covidTypeData = null;
+    let expertiseFilterData = null;
+    let fascilitiesFilterData = null;
     if (metaData) {
         let attMap = new Map(metaData.trackedEntityType.trackedEntityTypeAttributes.map(att => [att.id, att]));
         bedTypeData = attMap.get(ATT_BED_TYPE);
         covidTypeData = attMap.get(ATT_COVID_TYPE);
+        expertiseFilterData = EXPERTISE_ATTRIBUTES.map(ex => attMap.get(ex));
+        fascilitiesFilterData = FACILITIES_ATTRIBUTES.map(ex => attMap.get(ex));
     }
     const [filters, setFilters] = useState({ [ATT_BED_TYPE]: [], [ATT_COVID_TYPE]: [] })
+    const [expertisetFilters, setExpertisetFilters] = useState([])
+    const [fascilitiesFilters, setFascilitiesFilters] = useState([])
 
     useEffect(() => {
         if (bedData) {
@@ -62,13 +68,13 @@ function ViewOrgICU() {
         if (activeOrgUnit) {
             setIsLoading(true);
             setTimeout(() => {
-                getICUsForParent(activeOrgUnit.id, filters).then(icus => {
+                getICUsForParent(activeOrgUnit.id, filters, expertisetFilters.concat(fascilitiesFilters)).then(icus => {
                     dispatch(updateFilteredICUList(icus));
                 });
             }, 0);
 
         }
-    }, [filters]);
+    }, [filters, expertisetFilters, fascilitiesFilters]);
 
     if (!activeOrgUnit) {
         return <p>Please select an organization unit</p>
@@ -112,9 +118,29 @@ function ViewOrgICU() {
                             <MultiSelectOption key={key} value={option.code} label={option.displayName} />
                         ))}
                     </MultiSelect>
+                    <MultiSelect
+                        selected={expertisetFilters}
+                        placeholder="Expertise"
+                        onChange={({ selected }) => {
+                            setExpertisetFilters(selected);
+                        }}>
+                        {expertiseFilterData && expertiseFilterData.map((option, key) => (
+                            <MultiSelectOption key={option.id} value={option.id} label={option.displayName} />
+                        ))}
+                    </MultiSelect>
+                    <MultiSelect
+                        selected={fascilitiesFilters}
+                        placeholder="Facilities"
+                        onChange={({ selected }) => {
+                            setFascilitiesFilters(selected);
+                        }}>
+                        {fascilitiesFilterData && fascilitiesFilterData.map((option, key) => (
+                            <MultiSelectOption key={option.id} value={option.id} label={option.displayName} />
+                        ))}
+                    </MultiSelect>
                     {(isLoading) &&
                         <div className="icu-table-loading">
-                           <CircularLoader small={true}/>
+                            <CircularLoader small={true} />
                         </div>
                     }
                 </div>

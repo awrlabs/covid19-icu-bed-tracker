@@ -9,7 +9,6 @@ export const ACTIONS = {
 
 // function to calculate if the parent has the child down the line
 function isRelated(parent, child) {
-    console.log("isRelated", parent, child, ICUHasParent(parent, child))
     // while( parentMatrix[child] !== parent ){
     //     child = parentMatrix[child];
 

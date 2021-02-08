@@ -80,7 +80,7 @@ export default function ICUMap(props) {
 
         }
     }
-    
+
     return (
         <LoadScript
             id="script-loader"

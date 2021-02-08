@@ -3,7 +3,7 @@ import { useDataQuery } from '@dhis2/app-runtime';
 import { PROGRAM } from "../constants";
 
 import ForerunnerDB from "forerunnerdb";
-import distances from "./distances";
+import distances from "./distances"; import { CircularLoader } from '@dhis2/ui-core';
 
 let fdb = new ForerunnerDB();
 let bedsDb = fdb.db("beds");
@@ -18,7 +18,7 @@ window.ic = icusCollection;
 
 // /bc.find({},{$join:[{"bedEvents":{"trackedEntityInstance":"trackedEntityInstance",$as:"events",$require:false,$multi:true}}]})
 
-export function queryForICU(icuId, filters) {
+export function queryForICU(icuId, filters, expertiseFilters = []) {
     //console.log("Filters", filters);
 
     let total = bedsCollection.count({
@@ -41,6 +41,11 @@ export function queryForICU(icuId, filters) {
         }
     });
 
+    expertiseFilters.forEach(fil => {
+        dbFilters[fil.value] = {
+            $eq: "true"
+        }
+    });
     //console.log("DB Filters", dbFilters, filters);
 
 
@@ -65,11 +70,11 @@ export function queryForICU(icuId, filters) {
     return { available, total, orgUnit };
 }
 
-export function getICUsForParent(parentId, filters, callback) {
+export function getICUsForParent(parentId, filters, expertiseFilters = []) {
     return new Promise((resolve, reject) => {
         resolve(
             icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
-                return { ...icu, ...queryForICU(icu.id, filters) }
+                return { ...icu, ...queryForICU(icu.id, filters, expertiseFilters) }
             }).filter(icu => icu.available > 0)
         );
     });
@@ -177,7 +182,7 @@ export default function DataStore({ children }) {
         }
     });
 
-    let render = dataLoading ? "Loading...." : children;
+    let render = dataLoading ? <CircularLoader /> : children;
 
     return (
         <div className="loader-wrapper">
