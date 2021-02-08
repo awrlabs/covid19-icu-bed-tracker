@@ -26,7 +26,7 @@ export default function ICUMap(props) {
 
     useEffect(() => {
         if (data) {
-            console.log("Data", data);
+            //console.log("Data", data);
             // if(!markerData){
             let _markerData = [];
             let _destinationData = [];

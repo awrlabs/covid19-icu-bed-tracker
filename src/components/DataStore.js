@@ -3,7 +3,7 @@ import { useDataQuery } from '@dhis2/app-runtime';
 import { PROGRAM } from "../constants";
 
 import ForerunnerDB from "forerunnerdb";
-import distances from "./distances.json";
+import distances from "./distances";
 
 let fdb = new ForerunnerDB();
 let bedsDb = fdb.db("beds");
@@ -66,10 +66,13 @@ export function queryForICU(icuId, filters) {
 }
 
 export function getICUsForParent(parentId, filters, callback) {
-    //console.log("Query for parent", parentId);
-    callback(icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
-        return { ...icu, ...queryForICU(icu.id, filters) }
-    }).filter(icu => icu.available > 0));
+    return new Promise((resolve, reject) => {
+        resolve(
+            icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
+                return { ...icu, ...queryForICU(icu.id, filters) }
+            }).filter(icu => icu.available > 0)
+        );
+    });
 }
 
 export function getICUPaths() {
@@ -85,10 +88,18 @@ export function getDistance(i1, i2) {
 function asyncInsert(collection, data) {
     return new Promise((resolve, reject) => {
         collection.insert(data, (result) => {
-            console.log("Data inserted", result);
+            //console.log("Data inserted", result);
             resolve(result);
         });
     });
+}
+
+export function ICUHasParent(parent, icudId) {
+    return icusCollection.find({
+        id: {
+            $eq: icudId
+        }
+    }).some(icu => icu.parents.some(p => p === parent));
 }
 
 export default function DataStore({ children }) {
@@ -123,7 +134,7 @@ export default function DataStore({ children }) {
             }
         }
     });
-    console.log("Results", loading, error, data, refetch);
+    //console.log("Results", loading, error, data, refetch);
 
     useEffect(() => {
         if (!loading) {
@@ -143,7 +154,7 @@ export default function DataStore({ children }) {
                 }
             });
 
-            console.log("Adding ", icus.length, "ICUs");
+            //console.log("Adding ", icus.length, "ICUs");
 
             Promise.all([
                 asyncInsert(

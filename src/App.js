@@ -6,10 +6,9 @@ import OrgUnits from './components/OrgUnits'
 import './App.css';
 import {
     Card, MultiSelect, MultiSelectOption, MultiSelectField, Button, ButtonStrip,
-    Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,
+    Table, TableHead, TableBody, TableRow, TableCellHead, TableCell,CircularLoader
 } from '@dhis2/ui-core';
 import ICUTable from './components/ICUTable';
-import * as api from "./mockapi";
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
@@ -21,7 +20,7 @@ import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
-import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM } from './constants';
+import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE } from './constants';
 import DataStore, { getICUsForParent } from "./components/DataStore";
 
 function getAttributeByName(bed, name) {
@@ -43,51 +42,31 @@ function ViewOrgICU() {
 
     const dispatch = useDispatch();
 
-    const bedTypeId = 'XYNBoDZS0aV'
-    const covidTypeId = 'Xt5tV6OFSEW'
+    const covidTypeId = ATT_COVID_TYPE;
     let bedTypeData = null
     let covidTypeData = null
     if (metaData) {
-        bedTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find(({ id }) => id === bedTypeId);
-        covidTypeData = metaData.trackedEntityType.trackedEntityTypeAttributes.find(({ id }) => id === covidTypeId);
+        let attMap = new Map(metaData.trackedEntityType.trackedEntityTypeAttributes.map(att => [att.id, att]));
+        bedTypeData = attMap.get(ATT_BED_TYPE);
+        covidTypeData = attMap.get(ATT_COVID_TYPE);
     }
-    const [filters, setFilters] = useState({ [bedTypeId]: [], [covidTypeId]: [] })
+    const [filters, setFilters] = useState({ [ATT_BED_TYPE]: [], [ATT_COVID_TYPE]: [] })
 
     useEffect(() => {
         if (bedData) {
-            for (var icu of bedData) {
-                if (icu.total === null) {
-                    dispatch(getICUStat(icu, filters));
-                    dispatch(updateICUStat({
-                        icuId: icu.id,
-                        stat: {
-                            total: "Updating...",
-                            available: null
-                        }
-                    }));
-                }
-            }
-
-            let _isLoading = false;
-            for (var icu of bedData) {
-                if (icu.isLoading) {
-
-                    console.log("ICU loading", icu);
-                    //_isLoading = true;
-                    break;
-                }
-            }
-            //console.log("Setting loading", _isLoading, bedData);
-            setIsLoading(_isLoading);
+            setIsLoading(false);
         }
     }, [bedData]);
 
     useEffect(() => {
         if (activeOrgUnit) {
-            console.log("Active user",activeUser);
-            getICUsForParent(activeOrgUnit.id, filters, (icus) => {
-                dispatch(updateFilteredICUList(icus));
-            });
+            setIsLoading(true);
+            setTimeout(() => {
+                getICUsForParent(activeOrgUnit.id, filters).then(icus => {
+                    dispatch(updateFilteredICUList(icus));
+                });
+            }, 0);
+
         }
     }, [filters]);
 
@@ -118,60 +97,47 @@ function ViewOrgICU() {
                 <span className="t20">Showing ICU Locations for <b>{activeOrgUnit.name}</b></span>
                 <div className="filter-area">
                     <MultiSelect
-                        selected={filters[bedTypeId]}
+                        selected={filters[ATT_BED_TYPE]}
                         placeholder={bedTypeData.displayName}
-                        onChange={({ selected }) => { setFilters({ ...filters, [bedTypeId]: selected }) }}
-                    >
+                        onChange={({ selected }) => { setFilters({ ...filters, [ATT_BED_TYPE]: selected }) }}>
                         {bedTypeData && bedTypeData.optionSet.options.map((option, key) => (
                             <MultiSelectOption className="multiselect-bedtype" key={key} value={option.code} label={option.displayName} />
                         ))}
                     </MultiSelect>
                     <MultiSelect
-                        selected={filters[covidTypeId]}
+                        selected={filters[ATT_COVID_TYPE]}
                         placeholder={covidTypeData.displayName}
-                        onChange={({ selected }) => { setFilters({ ...filters, [covidTypeId]: selected }) }}
-                    >
+                        onChange={({ selected }) => { setFilters({ ...filters, [ATT_COVID_TYPE]: selected }) }}>
                         {covidTypeData && covidTypeData.optionSet.options.map((option, key) => (
                             <MultiSelectOption key={key} value={option.code} label={option.displayName} />
                         ))}
                     </MultiSelect>
+                    {(isLoading) &&
+                        <div className="icu-table-loading">
+                           <CircularLoader small={true}/>
+                        </div>
+                    }
                 </div>
 
 
                 <div className="icu-org">
-                    {(isLoading) &&
-                        <div className="icu-table">
-                            <p>Loading ICU stat, please wait...</p>
-                            {/* <ICUTable
-                                    data={[]}
-                                    onSelectICU={onSelectICU}
-                                /> */}
-                        </div>
-                    }
-                    {!(isLoading) &&
-                        <div className="icu-table">
-                            <ICUTable
-                                data={bedData}
-                                onSelectICU={onSelectICU}
-                            />
-                        </div>
-                    }
-                    {!isLoading &&
-                        <div className="icu-map">
-                            <ICUMap
-                                onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
-                                // data={bedData.filter(bed => bed.total !== 0)}
-                                data={bedData}
-                                origin={activeUser.origin}
-                            />
-                        </div>
-                    }
+                    <div className="icu-table">
+                        <ICUTable
+                            data={bedData}
+                            onSelectICU={onSelectICU} />
+                    </div>
+                    <div className="icu-map">
+                        <ICUMap
+                            onMarkerClick={(ICUEntry) => { console.log(ICUEntry) }}
+                            // data={bedData.filter(bed => bed.total !== 0)}
+                            data={bedData}
+                            origin={activeUser.origin} />
+                    </div>
                 </div>
 
             </>
         )
     )
-
 }
 
 function ViewICUBeds() {

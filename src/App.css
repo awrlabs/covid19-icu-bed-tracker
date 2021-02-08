@@ -16,6 +16,10 @@
     background-color: #21252B;
 }
 
+.left-column div{
+    background: rgb(49, 54, 63);
+}
+
 .left-column ul{
     /* min-height: 100vh; */
     /* height: inherit !important; */
@@ -31,11 +35,13 @@
     overflow-y: scroll;
 }
 
+
 .filter-area{
     display: flex;
     flex-direction: row;
     margin-top: 30px;
     margin-bottom: 10px;
+    height: 56px;
 }
 
 .icu-bed-container{
@@ -115,6 +121,7 @@
 
 .icu-table{
     width: 60%;
+    margin-bottom: 60px;
 }
 
 .icu-map{
