@@ -9,11 +9,10 @@ import { getICUsForParent } from "./DataStore";
 
 const query = {
     organisationUnits: {
-        resource: 'organisationUnits.json',
+        resource: 'me.json',
         params: {
             paging: 'false',
-            level: "1",
-            fields: "id,name,level,children[id, name, level, children[id, name, level, children[id, name, level, children[id, name, level, organisationUnitGroups]]]]"
+            fields: "organisationUnits[id,name,level,children[id, name, level,organisationUnitGroups, children[id, name, level, organisationUnitGroups,children[id, name, level,organisationUnitGroups, children[id, name, level, organisationUnitGroups]]]]]"
         },
     }
 }
