@@ -20,6 +20,8 @@ bedsCollection.remove();
 bedEventsCollection.remove();
 icusCollection.remove();
 
+let availableBeds = [];
+
 // /bc.find({},{$join:[{"bedEvents":{"trackedEntityInstance":"trackedEntityInstance",$as:"events",$require:false,$multi:true}}]})
 
 // todo move API calls to apiActions
@@ -32,18 +34,6 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
             $eq: icuId
         }
     });
-
-    let availableBeds = bedEventsCollection.find({
-        dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
-    }).map(bed => bed.trackedEntityInstance);
-
-    let noEvents = bedsCollection.find({
-        trackedEntityInstance: {
-            $nin: bedEventsCollection.find().map(x => x.trackedEntityInstance)
-        }
-    }).map(bed => bed.trackedEntityInstance);
-
-    console.log("No events", noEvents);
 
     let dbFilters = {};
 
@@ -68,14 +58,7 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
             $eq: icuId
         },
         trackedEntityInstance: {
-            $or:[
-                {
-                    $in: availableBeds
-                },
-                {
-                    $in: noEvents
-                }
-            ]
+            $in: availableBeds
         },
         ...dbFilters
         // },
@@ -94,7 +77,6 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
     let time = { hours, mins };
     let distance = parseInt(distanceObj.dt / 1000);
 
-    console.log("Results", available, total, orgUnit);
     return { available, total, orgUnit, distance, time };
 }
 
@@ -214,6 +196,20 @@ export default function DataStore({ children }) {
                 })),
             ]).then(() => {
                 setDataLoading(false);
+
+                // setting available beds
+                availableBeds = bedEventsCollection.find({
+                    dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
+                }).map(bed => bed.trackedEntityInstance);
+
+                let noEvents = bedsCollection.find({
+                    trackedEntityInstance: {
+                        $nin: bedEventsCollection.find().map(x => x.trackedEntityInstance)
+                    }
+                }).map(bed => bed.trackedEntityInstance);
+
+            
+                availableBeds = availableBeds.concat(noEvents);
             });
         } else if (error) {
             console.error("Error", error);

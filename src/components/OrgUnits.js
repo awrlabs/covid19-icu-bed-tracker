@@ -66,7 +66,7 @@ export default function OrgUnits() {
             }
         }
         setCursor(node);
-        setOrgRoot(Object.assign({}, orgRoot))
+        //setOrgRoot(Object.assign({}, orgRoot))
         selectOU(node);
     }
 
@@ -87,20 +87,15 @@ export default function OrgUnits() {
                 dispatch(updateFilteredICUList(icus));
             });
         }
-
     }
 
     return (
         <Card>
             {orgRoot && (
-                <div className="ou-tree-column">
                 <Treebeard
                     data={orgRoot}
                     onToggle={onToggle}
                 />
-
-                <h2>Select Root</h2>
-                </div>
             )}
 
             {!orgRoot && <CircularLoader small={true} />}
