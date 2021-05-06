@@ -197,6 +197,7 @@ export function getBedStatus(instanceId) {
 
         const events = response.events.events;
         let status = "";
+        let lastEvent = {};
 
         if (events.length > 0) {
             const lastEvent = events[0];
@@ -217,13 +218,20 @@ export function getBedStatus(instanceId) {
                         break;
                 }
             }
-
-            dispatch(updateBedStatus({
-                bedId: instanceId,
-                status: status,
-                lastEvent: lastEvent
-            }))
+            // dispatch(updateBedStatus({
+            //     bedId: instanceId,
+            //     status: status
+            // }));
+        } else {
+            status = "AVAILABLE";
         }
+
+        // console.log("LE", lastEvent);
+
+        dispatch(updateBedStatus({
+            bedId: instanceId,
+            status: status
+        }));
     }
 }
 
@@ -400,4 +408,4 @@ export function getActiveICData(icuId) {
             console.log("Error in creating:", error)
         }
     }
-} 
+}

@@ -32,7 +32,7 @@ export default function OrgUnits() {
 
     useEffect(() => {
         if (data) {
-            const root = data.organisationUnits.organisationUnits[0];
+            const root = data.organisationUnits.organisationUnits;
             setOrgRoot(root);
         }
     }, [loading]);
@@ -93,11 +93,14 @@ export default function OrgUnits() {
     return (
         <Card>
             {orgRoot && (
+                <div className="ou-tree-column">
                 <Treebeard
                     data={orgRoot}
                     onToggle={onToggle}
                 />
 
+                <h2>Select Root</h2>
+                </div>
             )}
 
             {!orgRoot && <CircularLoader small={true} />}

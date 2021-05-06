@@ -164,3 +164,8 @@ div[data-test="dhis2-uicore-card"] {
 .name-column{
     width:350px;
 }
+
+.ou-tree-column{
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}

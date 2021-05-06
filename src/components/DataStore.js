@@ -16,6 +16,10 @@ window.bc = bedsCollection;
 window.ebc = bedEventsCollection;
 window.ic = icusCollection;
 
+bedsCollection.remove();
+bedEventsCollection.remove();
+icusCollection.remove();
+
 // /bc.find({},{$join:[{"bedEvents":{"trackedEntityInstance":"trackedEntityInstance",$as:"events",$require:false,$multi:true}}]})
 
 // todo move API calls to apiActions
@@ -32,6 +36,14 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
     let availableBeds = bedEventsCollection.find({
         dataValues: { dataElement: { $eq: "MtYPOv0wqCg" }, value: { $eq: "Discharged" } }
     }).map(bed => bed.trackedEntityInstance);
+
+    let noEvents = bedsCollection.find({
+        trackedEntityInstance: {
+            $nin: bedEventsCollection.find().map(x => x.trackedEntityInstance)
+        }
+    }).map(bed => bed.trackedEntityInstance);
+
+    console.log("No events", noEvents);
 
     let dbFilters = {};
 
@@ -56,7 +68,14 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
             $eq: icuId
         },
         trackedEntityInstance: {
-            $in: availableBeds
+            $or:[
+                {
+                    $in: availableBeds
+                },
+                {
+                    $in: noEvents
+                }
+            ]
         },
         ...dbFilters
         // },
@@ -75,7 +94,7 @@ function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
     let time = { hours, mins };
     let distance = parseInt(distanceObj.dt / 1000);
 
-    //console.log("Results", available, total, orgUnit);
+    console.log("Results", available, total, orgUnit);
     return { available, total, orgUnit, distance, time };
 }
 
