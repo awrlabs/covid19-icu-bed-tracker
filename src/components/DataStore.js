@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDataQuery } from '@dhis2/app-runtime';
-import { PROGRAM } from "../constants";
+import { PROGRAM, BED_TEI_TYPE } from "../constants";
 
 import ForerunnerDB from "forerunnerdb";
 import distances from "./distances"; import { CircularLoader } from '@dhis2/ui-core';
@@ -18,7 +18,9 @@ window.ic = icusCollection;
 
 // /bc.find({},{$join:[{"bedEvents":{"trackedEntityInstance":"trackedEntityInstance",$as:"events",$require:false,$multi:true}}]})
 
-export function queryForICU(icuId, filters, expertiseFilters = []) {
+// todo move API calls to apiActions
+
+function queryForICU(icuId, filters, expertiseFilters = [], distanceOrigin) {
     //console.log("Filters", filters);
 
     let total = bedsCollection.count({
@@ -66,15 +68,22 @@ export function queryForICU(icuId, filters, expertiseFilters = []) {
     // , { $join: [{ "bedEvents": { "trackedEntityInstance": "trackedEntityInstance", $as: "events", $require: false, $multi: true } }] }
 
     let orgUnit = icusCollection.find({ id: { $eq: icuId } })[0];
+
+    let distanceObj = getDistance(orgUnit.parent.id, distanceOrigin);
+    let hours = parseInt(distanceObj.dr / 3600);
+    let mins = parseInt((distanceObj.dr % 3600) / 60);
+    let time = { hours, mins };
+    let distance = parseInt(distanceObj.dt / 1000);
+
     //console.log("Results", available, total, orgUnit);
-    return { available, total, orgUnit };
+    return { available, total, orgUnit, distance, time };
 }
 
-export function getICUsForParent(parentId, filters, expertiseFilters = []) {
+export function getICUsForParent(parentId, filters, expertiseFilters = [], distanceOrigin = "") {
     return new Promise((resolve, reject) => {
         resolve(
             icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
-                return { ...icu, ...queryForICU(icu.id, filters, expertiseFilters) }
+                return { ...icu, ...queryForICU(icu.id, filters, expertiseFilters, distanceOrigin) }
             }).filter(icu => icu.available > 0)
         );
     });
@@ -87,7 +96,15 @@ export function getICUPaths() {
 export function getDistance(i1, i2) {
     let key = [i1, i2];
     key.sort();
-    return distances[key.join("_")] || { dr: 0, dr: 0 };
+    return distances[key.join("_")] || { dr: 0, dt: 0 };
+}
+
+export function getBedsForIcu(icuId) {
+    return [...bedsCollection.find({
+        orgUnit: {
+            $eq: icuId
+        }
+    })];
 }
 
 function asyncInsert(collection, data) {
@@ -117,7 +134,7 @@ export default function DataStore({ children }) {
             params: {
                 ouMode: "ACCESSIBLE",
                 fields: "trackedEntityInstance,attributes[attribute,value],orgUnit",
-                program: PROGRAM,
+                trackedEntityType: BED_TEI_TYPE,
                 paging: "false"
             },
         },
@@ -142,7 +159,7 @@ export default function DataStore({ children }) {
     //console.log("Results", loading, error, data, refetch);
 
     useEffect(() => {
-        if (!loading) {
+        if (!loading && data) {
             let icus = data.icus.organisationUnits.map(icu => {
                 let lat = 0;
                 let lng = 0;
@@ -167,7 +184,7 @@ export default function DataStore({ children }) {
                         te.attributes && te.attributes.forEach(at => {
                             te[at.attribute] = at.value;
                         });
-                        delete te.attributes;
+                        //delete te.attributes;
                         return te;
                     })
                 ),
@@ -179,6 +196,8 @@ export default function DataStore({ children }) {
             ]).then(() => {
                 setDataLoading(false);
             });
+        } else if (error) {
+            console.error("Error", error);
         }
     });
 

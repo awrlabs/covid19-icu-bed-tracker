@@ -113,11 +113,12 @@ export default function ICUMap(props) {
                                 style={{ backgroundColor: 'white', opacity: 0.95, padding: 5 }}
                             >
                                 <div style={{ fontSize: 14, fontColor: `#08233B` }}>
-                                    <div>Hospital: {infoWindowData.displayName}</div>
-                                    <div><b>ICUs</b></div>
+                                    <h5>{infoWindowData.displayName}</h5>
+                                    <ul>
                                     {infoWindowData.icus.map(name => (
-                                        <div>{name}</div>
+                                        <li>{name}</li>
                                     ))}
+                                    </ul>
                                 </div>
                             </div>
                         </InfoBox>}

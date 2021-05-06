@@ -2,13 +2,7 @@ import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser,
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 import { ICU_EVENT_ID } from '../constants';
-import { queryForICU } from "../components/DataStore";
-
-export function test() {
-    return async (dispatch, getState, dhisEngine) => {
-        console.log(dhisEngine);
-    }
-}
+import { getBedsForIcu } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
     let dataValue = {};
@@ -32,23 +26,6 @@ function bedEventHelper(metaData, eventType) {
     return dataValue;
 }
 
-function getEventStatus(event) {
-    if (event.dataValues.length > 0) {
-        switch (event.dataValues[0].value) {
-            case "Discharged":
-                return "AVAILABLE";
-
-            case "Admitted":
-                return "OCCUPIED";
-
-            case "Reserved":
-                return "RESERVED";
-        }
-    }
-
-    return "";
-}
-
 export function getActiveUser() {
     return async (dispatch, getState, dhisEngine) => {
         try {
@@ -56,19 +33,32 @@ export function getActiveUser() {
                 user: {
                     resource: 'me',
                     params: {
-                        fields: "id,displayName,userGroups,organisationUnits[id, geometry]"
+                        fields: "id,displayName,userGroups,organisationUnits[id, geometry, level, parent[id, level,geometry]]"
                     }
                 }
             }
             const { user } = await dhisEngine.query(query);
+
+            let origin = null;
+            let originId = "";
+            if (user.organisationUnits && user.organisationUnits.length > 0) {
+                if (user.organisationUnits[0].level === 5) {
+                    let parentOu = user.organisationUnits[0].parent;
+                    console.log("Parent OU", parentOu)
+                    originId = parentOu.id;
+                    origin = (parentOu.geometry
+                        && parentOu.geometry.type === "Point") ?
+                        parentOu.geometry.coordinates : null;
+                }
+            }
+
             dispatch(setActiveUser({
                 id: user.id,
                 name: user.displayName,
                 group: user.userGroups.length > 0 ? user.userGroups.map(ug => ug.id) : null,
                 organisationUnits: user.organisationUnits.map(ou => ou.id),
-                origin: (user.organisationUnits.length > 0 && user.organisationUnits[0].geometry
-                    && user.organisationUnits[0].geometry.type === "Point") ?
-                    user.organisationUnits[0].geometry.coordinates : null
+                origin,
+                originId
             }))
         } catch (error) {
             dispatch(showNotification({
@@ -166,22 +156,12 @@ export function getMetaData() {
 
 
 export function getICUBeds(icuId, program) {
-    console.log("ICU ID", icuId);
     return async (dispatch, getState, dhisEngine) => {
         try {
-            const query = {
-                results: {
-                    resource: 'trackedEntityInstances',
-                    params: {
-                        ou: icuId,
-                        fields: "trackedEntityInstance,attributes[attribute,displayName,value],enrollments",
-                        program: program
-                    },
-                }
-            }
-            const response = await dhisEngine.query(query);
 
-            const beds = response.results.trackedEntityInstances;
+            const beds = getBedsForIcu(icuId);
+
+            console.log("Beds", beds);
             // now get status of each
             for (var bed of beds) {
                 dispatch(getBedStatus(bed.trackedEntityInstance));
@@ -387,63 +367,6 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in adding bed event',
-                type: 'error'
-            }))
-            console.log("Error in creating:", error)
-        }
-    }
-}
-
-export function getICUStat(icu, filters = {}) {
-    //console.log("Get ICU Stats called", icu, filters);
-
-    return async (dispatch, getState, dhisEngine) => {
-        try {
-            dispatch(updateICUStatRequest({ icuId: icu.id }));
-            let filtersQuery = "";
-            for (var filter in filters) {
-                if (filters[filter].length === 0) {
-                    continue;
-                }
-                const values = filters[filter].map(f => f.value);
-                filtersQuery += `${filter}:IN:${values.join(";")},`
-            }
-            filtersQuery = filtersQuery.substr(0, filtersQuery.length - 1);
-            // first we complete last event
-
-            const { available, total, orgUnit } = queryForICU(icu.id, filters);
-
-            let stat = {
-                available,
-                total
-            };
-
-            // for (var event of response.events.events) {
-            //     let teIndex = response.filteredTEI.trackedEntityInstances.findIndex(te => te.trackedEntityInstance === event.trackedEntityInstance);
-
-            //     if (teIndex === -1) {
-            //         // filtered TE doesn't have this
-            //         continue;
-            //     }
-
-            //     let status = getEventStatus(event);
-
-            //     if (status === "AVAILABLE") {
-            //         stat.available++;
-            //     }
-
-            //     stat.total++;
-            // }
-            dispatch(updateICUStat({
-                icuId: icu.id,
-                stat: stat,
-                icuName: `${orgUnit.parent.displayName} - ${orgUnit.displayName}`,
-                contactPerson: orgUnit.contactPerson,
-                contactNumber: orgUnit.phoneNumber
-            }))
-        } catch (error) {
-            dispatch(showNotification({
-                message: 'error in retrieving ICU status',
                 type: 'error'
             }))
             console.log("Error in creating:", error)

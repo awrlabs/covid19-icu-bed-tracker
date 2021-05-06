@@ -12,25 +12,16 @@ import ICUTable from './components/ICUTable';
 import { rootReducer } from './state/store';
 import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
-import { setActiveICU, setMetaData, setActiveOrgUnit, updateICUStat, updateICUDistance, updateFilteredICUList } from './state/appState';
+import { setActiveICU, setActiveOrgUnit, updateFilteredICUList, setFilterCriteria } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds, getMetaData, addBedEvent, removeBed, getICUStat, getActiveUser, getActiveICData } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed, getActiveUser, getActiveICData } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
-import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE } from './constants';
+import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE, ATT_BED_NUMBER } from './constants';
 import DataStore, { getICUsForParent } from "./components/DataStore";
-
-function getAttributeByName(bed, name) {
-    for (var attrib of bed.attributes) {
-        if (attrib.displayName === name) {
-            return attrib.value;
-        }
-    }
-    return "";
-}
 
 function ViewOrgICU() {
 
@@ -67,8 +58,14 @@ function ViewOrgICU() {
     useEffect(() => {
         if (activeOrgUnit) {
             setIsLoading(true);
+            dispatch(setFilterCriteria(
+                {
+                    typeFilters: filters,
+                    specialityFilters: expertisetFilters.concat(fascilitiesFilters)
+                }
+            ));
             setTimeout(() => {
-                getICUsForParent(activeOrgUnit.id, filters, expertisetFilters.concat(fascilitiesFilters)).then(icus => {
+                getICUsForParent(activeOrgUnit.id, filters, expertisetFilters.concat(fascilitiesFilters), activeUser.originId).then(icus => {
                     dispatch(updateFilteredICUList(icus));
                 });
             }, 0);
@@ -286,7 +283,7 @@ function ViewICUBeds() {
                             {activeICU.beds.map((bed, key) => (
                                 <ICUBed
                                     key={key}
-                                    name={getAttributeByName(bed, "ICU - Bed Number")}
+                                    name={bed[ATT_BED_NUMBER]}
                                     status={bed.status ? bed.status : "IDLE"}
                                     onView={() => onViewBed(bed)}
                                     onOccupy={() => onOccupyBed(bed)}
@@ -379,9 +376,9 @@ function ViewConfigureBeds({ onBack }) {
                         <TableBody>
                             {activeICU.beds.map((bed, key) => (
                                 <TableRow key={key}>
-                                    <TableCell>{getAttributeByName(bed, "ICU - Bed Number")}</TableCell>
-                                    <TableCell>{getAttributeByName(bed, "ICU - Type")}</TableCell>
-                                    <TableCell>{getAttributeByName(bed, "ICU - COVID Type")}</TableCell>
+                                    <TableCell>{bed[ATT_BED_NUMBER]}</TableCell>
+                                    <TableCell>{bed[ATT_BED_TYPE]}</TableCell>
+                                    <TableCell>{bed[ATT_COVID_TYPE]}</TableCell>
                                     <TableCell>
                                         <ButtonStrip>
                                             <Button onClick={() => onSelectBed(bed)}>View Details</Button>

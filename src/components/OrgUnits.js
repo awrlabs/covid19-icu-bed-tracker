@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CircularLoader } from '@dhis2/ui-core';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { DataQuery, useDataQuery } from '@dhis2/app-runtime'
 import { Treebeard } from 'react-treebeard';
 import { setActiveOrgUnit, updateFilteredICUList, setActiveICU } from '../state/appState';
 import { ICU_ORG_UNIT_GROUP } from '../constants';
-import { getICUsForParent, getICUPaths } from "./DataStore";
+import { getICUsForParent } from "./DataStore";
 
 const query = {
     organisationUnits: {
@@ -25,6 +25,11 @@ export default function OrgUnits() {
     const [orgRoot, setOrgRoot] = useState(null);
     const [cursor, setCursor] = useState(false);
     const dispatch = useDispatch();
+    const filterCriteria = useSelector(state => state.app.filterCriteria || {
+        typeFilters: {},
+        specialityFilters: []
+    });
+    const activeUser = useSelector(state => state.app.activeUser);
 
     useEffect(() => {
         if (data) {
@@ -79,7 +84,7 @@ export default function OrgUnits() {
                 beds: []
             }))
         } else {
-            getICUsForParent(node.id, {}).then(icus => {
+            getICUsForParent(node.id, filterCriteria.typeFilters, filterCriteria.specialityFilters, activeUser.originId).then(icus => {
                 dispatch(updateFilteredICUList(icus));
             });
         }

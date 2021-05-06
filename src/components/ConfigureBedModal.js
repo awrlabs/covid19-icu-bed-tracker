@@ -7,7 +7,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import * as moment from 'moment';
 import { useDataMutation, useDataEngine } from '@dhis2/app-runtime';
-import { test, createBed, updateBed } from '../state/apiActions';
+import { createBed, updateBed } from '../state/apiActions';
 
 const booleanSelections = [
     { label: "No", value: 'false' },

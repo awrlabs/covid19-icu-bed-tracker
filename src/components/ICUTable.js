@@ -5,9 +5,6 @@ import {
     Button, DropdownButton
 } from '@dhis2/ui-core';
 import { useDispatch } from 'react-redux';
-import { getICUStat } from '../state/apiActions';
-import { generateICUName } from "../utils";
-import { getDistance } from "./DataStore";
 
 
 function sortData(field, data, state) {
@@ -61,7 +58,7 @@ export default function ICUTable({ data, onSelectICU }) {
         <Table>
             <TableHead>
                 <TableRow>
-                    <TableCellHead >
+                    <TableCellHead className="name-column" >
                         <DropdownButton
                             primary={sortedBy === 'name'}
                             onClick={() => { sortData('name', locationData, stateData) }}
@@ -97,20 +94,16 @@ export default function ICUTable({ data, onSelectICU }) {
             </TableHead>
             <TableBody>
                 {locationData.map((loc, key) => {
-                    let distance = getDistance(loc.parent.id, "MgN1qEkJZ9e");
-                    let hours = parseInt(distance.dr / 3600);
-                    let mins = parseInt((distance.dr % 3600) / 60);
-                    let dstInKm = parseInt(distance.dt / 1000);
                     return (
                         <TableRow key={key}>
                             <TableCell><a href="#" onClick={() => onSelectICU(loc)}>{loc.name} </a></TableCell>
                             <TableCell>
                                 <div className="distance-cell">
                                     <div>
-                                        {dstInKm} km
+                                        {loc.distance} km
                                     </div>
                                     <div className="distance-cell-time">
-                                        {hours} hours {mins} mins
+                                        {loc.time.hours} hours {loc.time.mins} mins
                                     </div>
                                 </div>
                             </TableCell>

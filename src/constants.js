@@ -24,6 +24,7 @@ export const PATIENT_ATTRIBUTES = [
 
 export const ATT_BED_TYPE = "XYNBoDZS0aV";
 export const ATT_COVID_TYPE = "Xt5tV6OFSEW";
+export const ATT_BED_NUMBER= "tswabivShTy";
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
 
@@ -32,3 +33,5 @@ export const ICU_ORG_UNIT_GROUP = "PTahQgpjqyQ";
 export const SUPER_ADMIN_GROUP = "LkEkMDG0zfj";
 
 export const PROGRAM = "C1wTfmmMQUn";
+
+export const BED_TEI_TYPE = "VusKORm3ZGL";

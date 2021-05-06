@@ -160,3 +160,7 @@ div[data-test="dhis2-uicore-card"] {
 .distance-cell-time{
     font-size: smaller;
 }
+
+.name-column{
+    width:350px;
+}
