@@ -1078,7 +1078,7 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.10.0", "@babel/runtime@^7.12.0", "@babel/runtime@^7.12.1", "@babel/runtime@^7.3.4", "@babel/runtime@^7.4.5", "@babel/runtime@^7.5.5", "@babel/runtime@^7.7.2", "@babel/runtime@^7.8.4":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.12.0", "@babel/runtime@^7.12.1", "@babel/runtime@^7.3.4", "@babel/runtime@^7.4.5", "@babel/runtime@^7.5.5", "@babel/runtime@^7.7.2", "@babel/runtime@^7.8.4":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.12.13.tgz#0a21452352b02542db0ffb928ac2d3ca7cb6d66d"
   integrity sha512-8+3UMPBrjFa/6TtKi/7sehPKqfAm4g6K+YQjyyFOLUTxzOngcRZTlAVY8sc2CORJYqdHQY8gRPHmn+qo15rCBw==
@@ -1268,24 +1268,6 @@
   dependencies:
     prop-types "^15"
 
-"@dhis2/ui-constants@6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui-constants/-/ui-constants-6.2.1.tgz#0538998d28f1aeaeac45c688e8571fa32d81f9a5"
-  integrity sha512-BoV92ltdqJ97772sPgh8MV5y3janCYz/EtoRbB2Q733sLbsjAXTWTlL7qG+hhCC4XMNMt+Sgqp9ALEnyQmRmEQ==
-  dependencies:
-    "@dhis2/prop-types" "^1.6.4"
-
-"@dhis2/ui-core@6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui-core/-/ui-core-6.2.1.tgz#4547a1d56febdac102c82fab3c9ac5a8913ae3d1"
-  integrity sha512-JksyeY+632sb6/Pmr7SvE4VYRlDRlTmLKKGbN7qEDH0/pfZqpfFNkSt9liHdJv0f9Ag++hnSmbc0IsY25+nb9g==
-  dependencies:
-    "@dhis2/prop-types" "^1.6.4"
-    "@popperjs/core" "^2.6.0"
-    classnames "^2.2.6"
-    react-popper "^2.2.3"
-    resize-observer-polyfill "^1.5.1"
-
 "@dhis2/ui-core@^4.6.1":
   version "4.21.1"
   resolved "https://registry.yarnpkg.com/@dhis2/ui-core/-/ui-core-4.21.1.tgz#2b5518f6bd5de75404df3eefa83452e0c40852aa"
@@ -1297,31 +1279,6 @@
     react-popper "^2.2.3"
     resize-observer-polyfill "^1.5.1"
 
-"@dhis2/ui-forms@6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui-forms/-/ui-forms-6.2.1.tgz#c0413436131bff237edebadfd8eae8dcfbbb2fd0"
-  integrity sha512-BbWANHIu32uY7RiB9PuZAfIO0Mr3ZVmUMUCtR7NNOPqQLXwjwZsJv141kjiTEejFxqd3SDCsZ6tIaphYd/XT5Q==
-  dependencies:
-    "@dhis2/prop-types" "^1.6.4"
-    classnames "^2.2.6"
-    final-form "^4.20.1"
-    react-final-form "^6.5.1"
-
-"@dhis2/ui-icons@6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui-icons/-/ui-icons-6.2.1.tgz#d6489155af6ab5227dbc4685a5364c6c68423770"
-  integrity sha512-IF7yJKFWnQD3/ABKGWV6HK2Kc9sl30KN4M9q+1RtXo0Qc52UiUrMzHjiU2d124HmobgSrgkel4YmALQLspijNQ==
-  dependencies:
-    "@dhis2/prop-types" "^1.6.4"
-
-"@dhis2/ui-widgets@6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui-widgets/-/ui-widgets-6.2.1.tgz#222867191aee5d3260523bc985f9a12a54fd5a9c"
-  integrity sha512-SYRLCo839PuWhG8/tyLJ/70lpEDuHArPE7kVqizJG9oadjoxOvcSUUxy7+RR3zqmLmLWpDCsN9Nz0TdqURukUA==
-  dependencies:
-    "@dhis2/prop-types" "^1.6.4"
-    classnames "^2.2.6"
-
 "@dhis2/ui-widgets@^2.0.4":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@dhis2/ui-widgets/-/ui-widgets-2.1.1.tgz#23b1887c0190e83bb7a41e6b570dfd41ba99d838"
@@ -1329,17 +1286,6 @@
   dependencies:
     "@dhis2/prop-types" "^1.6"
     classnames "^2.2.6"
-
-"@dhis2/ui@^6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@dhis2/ui/-/ui-6.2.1.tgz#0f4eec6b295c557b0b9d3208aac1cdfe93dc7ec6"
-  integrity sha512-0Wd5cB49OvvLp22q3WeuuEYqpKVNQU8RoFLuRd4ftxeQm1V3iGrICbAakSOpbRwoM4iNgFTtwqp4Ewp0+Q5tyg==
-  dependencies:
-    "@dhis2/ui-constants" "6.2.1"
-    "@dhis2/ui-core" "6.2.1"
-    "@dhis2/ui-forms" "6.2.1"
-    "@dhis2/ui-icons" "6.2.1"
-    "@dhis2/ui-widgets" "6.2.1"
 
 "@emotion/cache@^10.0.27":
   version "10.0.29"
@@ -1469,10 +1415,12 @@
   dependencies:
     prop-types "^15.7.2"
 
-"@googlemaps/js-api-loader@1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@googlemaps/js-api-loader/-/js-api-loader-1.6.0.tgz#351c904ca31bcc7d961aa115373d5cd411ebee80"
-  integrity sha512-amuilneCf7q5A/jDUE3ml83c9NjW/3DzIqiBDFIKZcraD0JSKbetkEQa5s57Z6QY7jxcequXgoL9CKJUY1xZ5A==
+"@googlemaps/js-api-loader@1.11.1":
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/@googlemaps/js-api-loader/-/js-api-loader-1.11.1.tgz#b7f02c04d8d8602fb4bd873b03685fccefce1c6f"
+  integrity sha512-2ug4uBu0onRXTAo7Yxkay5N7pdNIz3XpTElMTLdCtEfQDxikbjeR6GS8atVhblX+ubFBNlXvDzz7VtuXv0vMRQ==
+  dependencies:
+    fast-deep-equal "^3.1.3"
 
 "@hapi/address@2.x.x":
   version "2.1.4"
@@ -1667,30 +1615,30 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@popperjs/core@^2.4.0", "@popperjs/core@^2.6.0":
+"@popperjs/core@^2.4.0":
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.6.0.tgz#f022195afdfc942e088ee2101285a1d31c7d727f"
   integrity sha512-cPqjjzuFWNK3BSKLm0abspP0sp/IGOli4p5I5fKFAzdS8fvjdOwDCfZqAaIiXd9lPkOWi3SUUfZof3hEb7J/uw==
 
-"@react-google-maps/api@^1.8.6":
-  version "1.13.0"
-  resolved "https://registry.yarnpkg.com/@react-google-maps/api/-/api-1.13.0.tgz#9fb25e9f8f0e54d9ed2bb5e5e0cf49bb717db7ab"
-  integrity sha512-mKwXziG5MbOvvcWG53FyZVZ8zjAuPNYkcS/+nYX9STMFNrI96AFq5l/zUn2QifRJnPzE8iO4V1vyMM+Ie9LpGg==
+"@react-google-maps/api@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@react-google-maps/api/-/api-2.1.1.tgz#0d195632927c72867b0cfcfec7eaef4b79f3bacc"
+  integrity sha512-Z/dcaDDfZD4DFnE1GhdHOIFHZ+VocEt6Ixe82f0f9tL/J0CZBQvfJ3V8RogY9fVraxdKIwnQx75U0O1JVqqBnw==
   dependencies:
-    "@googlemaps/js-api-loader" "1.6.0"
-    "@react-google-maps/infobox" "1.12.1"
-    "@react-google-maps/marker-clusterer" "1.12.1"
+    "@googlemaps/js-api-loader" "1.11.1"
+    "@react-google-maps/infobox" "2.1.1"
+    "@react-google-maps/marker-clusterer" "2.1.1"
     invariant "2.2.4"
 
-"@react-google-maps/infobox@1.12.1":
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/@react-google-maps/infobox/-/infobox-1.12.1.tgz#6c0354b6cfc52c8689f99ee5ce1fb5668fa78697"
-  integrity sha512-tD/xijqRtKK/LNRzuerzuyvybnRaD8SLgCA064len4/enTo1abhQN215ZYqwbTOn7RgYt9qMgNnwoX//u3xoWw==
+"@react-google-maps/infobox@2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@react-google-maps/infobox/-/infobox-2.1.1.tgz#1d2f20f00725f087edc031c3291fcc4c08edae7c"
+  integrity sha512-x/+Td4Wsw+ziEcLjgQketCphuueLZ4vQLFkLrUBVzsHj4as4at79GsdVwoAdKIkBc5BDYJZw3ZGSr/SnWSObeg==
 
-"@react-google-maps/marker-clusterer@1.12.1":
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/@react-google-maps/marker-clusterer/-/marker-clusterer-1.12.1.tgz#fcf8df395a102b56258601c9b85d671dcd03d7cf"
-  integrity sha512-JBSO5VJuouP/boBnSdRDCWq0UKO7jr3HvZVhis3ew+VGJ/BoCPu3lpU0HDsjjulfng+xwqLfVOIzP3QnvBPdCA==
+"@react-google-maps/marker-clusterer@2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@react-google-maps/marker-clusterer/-/marker-clusterer-2.1.1.tgz#fa6cdcbbfee6a529a4d60b1575168a7aa1fedf91"
+  integrity sha512-LIqf1T2dVXRaf/gqk/7kEDpRvr1aQGlqOv/p5zwZus3qI6/3qK4jxNpc89gQ2WkCMrGwcI/fTQrnI55BZCxsLA==
 
 "@reduxjs/toolkit@^1.2.5":
   version "1.5.0"
@@ -5217,7 +5165,7 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
 
-fast-deep-equal@^3.1.1:
+fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
@@ -5352,13 +5300,6 @@ fill-range@^7.0.1:
   integrity sha512-qOo9F+dMUmC2Lcb4BbVvnKJxTPjCm+RRpe4gDuGrzkL7mEVl/djYSu2OdQ2Pa302N4oqkSg9ir6jaLWJ2USVpQ==
   dependencies:
     to-regex-range "^5.0.1"
-
-final-form@^4.20.1:
-  version "4.20.1"
-  resolved "https://registry.yarnpkg.com/final-form/-/final-form-4.20.1.tgz#525a7f7f27f55c28d8994b157b24d6104fc560e9"
-  integrity sha512-IIsOK3JRxJrN72OBj7vFWZxtGt3xc1bYwJVPchjVWmDol9DlzMSAOPB+vwe75TUYsw1JaH0fTQnIgwSQZQ9Acg==
-  dependencies:
-    "@babel/runtime" "^7.10.0"
 
 finalhandler@~1.1.2:
   version "1.1.2"
@@ -10150,13 +10091,6 @@ react-fast-compare@^3.0.1:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-3.2.0.tgz#641a9da81b6a6320f270e89724fb45a0b39e43bb"
   integrity sha512-rtGImPZ0YyLrscKI9xTpV8psd6I8VAtjKCzQDlzyDvqJA8XOW78TXYQwNRNd8g8JZnDu8q9Fu/1v4HPAVwVdHA==
-
-react-final-form@^6.5.1:
-  version "6.5.2"
-  resolved "https://registry.yarnpkg.com/react-final-form/-/react-final-form-6.5.2.tgz#d04d1eb7d92eabc6f6c35206bb0eebfc4bfd924b"
-  integrity sha512-c5l45FYOoxtfpvsvMFh3w2WW8KNxbuebBUrM16rUrooQkewTs0Zahmv0TuKFX5jsC9BKn5Fo84j3ZVXQdURS4w==
-  dependencies:
-    "@babel/runtime" "^7.12.1"
 
 react-is@^16.13.1, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.4:
   version "16.13.1"

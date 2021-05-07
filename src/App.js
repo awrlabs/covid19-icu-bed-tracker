@@ -204,6 +204,13 @@ function ViewICUBeds() {
         // dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted"));
     }
 
+    const onStatusChange = (bed) => {
+        setPatientEditable(false);
+        setSelectedBed(bed);
+        setPatientModalAction("status");
+        setPatientModalOpen(true);
+    };
+
     const onReserveBed = (bed) => {
         // confirmation.show("Do you want to confirm reserving this bed?",
         //     () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved")),
@@ -225,6 +232,7 @@ function ViewICUBeds() {
     const onViewPatient = (bed) => {
         setSelectedBed(bed);
         setPatientEditable(false);
+        setPatientModalAction("view");
         setPatientModalOpen(true);
     }
 
@@ -281,6 +289,7 @@ function ViewICUBeds() {
                                 <p>No beds currently added</p>
                             }
                             {activeICU.beds.map((bed, key) => (
+
                                 <ICUBed
                                     key={key}
                                     name={bed[ATT_BED_NUMBER]}
@@ -290,6 +299,7 @@ function ViewICUBeds() {
                                     onDischarge={() => onDischargeBed(bed)}
                                     onReserve={() => onReserveBed(bed)}
                                     onViewPatient={() => onViewPatient(bed)}
+                                    onStatusChange={() => onStatusChange(bed)}
                                     hasEventPerm={eventPerm}
                                     hasEditPerm={hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)}
                                 />

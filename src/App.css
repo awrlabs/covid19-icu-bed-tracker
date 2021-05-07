@@ -169,3 +169,7 @@ div[data-test="dhis2-uicore-card"] {
     display: grid;
     grid-template-rows: 1fr 1fr;
 }
+
+label[data-test=dhis2-uicore-checkbox]:not(:last-of-type){
+    margin-bottom: 10px;
+}

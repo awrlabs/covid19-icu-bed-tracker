@@ -7,30 +7,8 @@ import {
 import { addBedEvent } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
 import useConfirmation from './useConfirmationHook';
-import { PATIENT_ATTRIBUTES } from '../constants';
-
-const patientFieldset = [
-    {
-        type: "TEXT",
-        label: "ICU - BHT Number",
-        id: "j1hbO7zzRgV"
-    },
-    {
-        type: "TEXT",
-        label: "ICU - Patient Name",
-        id: "sK09QRLNyAA"
-    },
-    {
-        type: "TEXT",
-        label: "ICU - Consultant In-charge",
-        id: "malZQqUEzi9"
-    },
-    {
-        type: "TEXT",
-        label: "ICU - Patient Diagnosis",
-        id: "qh9bc6jlauE"
-    }
-]
+import { PATIENT_ATTRIBUTES, STATUS_ATTRIBUTES } from '../constants';
+import { getLastEvent } from './DataStore';
 
 export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable }) {
 
@@ -43,13 +21,27 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
     const confirmation = useConfirmation();
 
+    const attributesSet = actionType == "status" ? STATUS_ATTRIBUTES : PATIENT_ATTRIBUTES;
+
+    const lastEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
+
+    console.log("LEVENT", lastEvent);
+
     useEffect(() => {
         let _formState = {};
-        for (var fieldId of PATIENT_ATTRIBUTES) {
+        for (var fieldId of attributesSet) {
             const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
             if (field.type === "TEXT") {
-                if (!editable && selectedBed.lastEvent) {
-                    _formState[field.id] = selectedBed.lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                if (!editable && lastEvent) {
+                    console.log("BEfore Find", lastEvent.dataValues);
+                    _formState[field.id] = lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                } else {
+                    _formState[field.id] = "";
+                }
+            } else if (field.type === "BOOLEAN") {
+                if (!editable && lastEvent) {
+                    console.log("BEfore Find", lastEvent.dataValues);
+                    _formState[field.id] = lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
                 } else {
                     _formState[field.id] = "";
                 }
@@ -59,6 +51,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     }, [selectedBed]);
 
     const updateField = (field, value) => {
+        console.log(field, value);
         setFormState({
             ...formState,
             [field]: value
@@ -78,6 +71,15 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     disabled={!editable}
                 />
             )
+        } else if (field.type == "BOOLEAN") {
+            return (
+                <Checkbox
+                    key={key}
+                    label={field.formName}
+                    name={field.id}
+                    onChange={(val) => updateField(field.id, val.checked)}
+                    checked={formState[field.id]} />
+            )
         }
     }
 
@@ -90,7 +92,9 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             })
         }
 
-        if (actionType === "admit") {
+        console.log("Sending event", dataValues, formState);
+
+        if (actionType === "admit" || actionType === "status") {
             dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted", dataValues));
         } else if (actionType === "reserve") {
             dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved", dataValues));
@@ -98,39 +102,52 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         onClose();
     }
 
+    let modelTitle = "";
+    let buttonText = "";
+
+    if (editable) {
+        if (actionType === "admit") {
+            modelTitle = "Admit New Patient";
+            buttonText = "Admit Patient";
+        } else if (actionType === "reserve") {
+            modelTitle = "Reserve For Patient";
+            buttonText = "Reserve";
+        }
+    } else {
+        modelTitle = "View Patient";
+
+        if (actionType === "status") {
+            modelTitle = "Change Status";
+            buttonText = "Save";
+        }
+    }
+
+    console.log("FS", formState);
+
 
     return (
         <Modal open>
             <ModalTitle>
-
-                {editable &&
-                    <span>{actionType === "admit" ? 'Admit' : 'Reserve'} New Patient</span>
-                }
-                {!editable &&
-                    <span>View Patient</span>
-                }
-
+                {modelTitle}
             </ModalTitle>
             <ModalContent>
-                {PATIENT_ATTRIBUTES.map((attrib, key) => getFormField(attrib, key))}
+                {attributesSet.map((attrib, key) => getFormField(attrib, key))}
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>
                     <Button
                         onClick={onClose}
                         secondary
-                        type="button"
-                    >
+                        type="button">
                         Close
                     </Button>
-                    {editable &&
+                    {(editable || actionType === "status") ?
                         <Button
                             onClick={admitPatient}
                             primary
-                            type="button"
-                        >
-                            {actionType === "admit" ? 'Admit' : 'Reserve'} Patient
-                        </Button>
+                            type="button">
+                            {buttonText}
+                        </Button> : null
                     }
                 </ButtonStrip>
             </ModalActions>

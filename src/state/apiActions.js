@@ -2,7 +2,7 @@ import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser,
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 import { ICU_EVENT_ID } from '../constants';
-import { getBedsForIcu } from "../components/DataStore";
+import { getBedsForIcu, swapLatestEvent } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
     let dataValue = {};
@@ -317,6 +317,7 @@ export function removeBed(icuId, enrollmentId) {
 }
 
 export function addBedEvent(teId, programId, programStageId, icuId, eventType, additionalData = []) {
+    // todo update local status
     return async (dispatch, getState, dhisEngine) => {
         try {
             // first we complete last event
@@ -371,6 +372,10 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                 data: payload
             };
             const response = await dhisEngine.mutate(mutation);
+            swapLatestEvent( {
+                trackedEntityInstance: teId,
+                dataValues
+            });
             dispatch(getBedStatus(teId));
         } catch (error) {
             dispatch(showNotification({

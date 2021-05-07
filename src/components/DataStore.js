@@ -108,6 +108,24 @@ export function getBedsForIcu(icuId) {
     })];
 }
 
+export function swapLatestEvent(event) {
+    bedEventsCollection.remove({
+        trackedEntityInstance: {
+            $eq: event.trackedEntityInstance
+        }
+    });
+    bedEventsCollection.insert(event);
+}
+
+export function getLastEvent(teiId) {
+    console.log("Last event of ", teiId);
+    let events = bedEventsCollection.find({ trackedEntityInstance: { $eq: teiId } });
+    if (events.length > 0) {
+        return events[0];
+    }
+    return undefined;
+}
+
 function asyncInsert(collection, data) {
     return new Promise((resolve, reject) => {
         collection.insert(data, (result) => {
@@ -208,7 +226,7 @@ export default function DataStore({ children }) {
                     }
                 }).map(bed => bed.trackedEntityInstance);
 
-            
+
                 availableBeds = availableBeds.concat(noEvents);
             });
         } else if (error) {
