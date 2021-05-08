@@ -6,7 +6,6 @@ import {
 } from '@dhis2/ui-core';
 import { addBedEvent } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
-import useConfirmation from './useConfirmationHook';
 import { PATIENT_ATTRIBUTES, STATUS_ATTRIBUTES } from '../constants';
 import { getLastEvent } from './DataStore';
 
@@ -19,13 +18,11 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     const programStage = useSelector(state => state.app.ICUEventId);
     const activeICU = useSelector(state => state.app.activeICU);
 
-    const confirmation = useConfirmation();
-
     const attributesSet = actionType == "status" ? STATUS_ATTRIBUTES : PATIENT_ATTRIBUTES;
 
     const lastEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
 
-    console.log("LEVENT", lastEvent);
+    console.log("LE", lastEvent);
 
     useEffect(() => {
         let _formState = {};
@@ -33,17 +30,17 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
             if (field.type === "TEXT") {
                 if (!editable && lastEvent) {
-                    console.log("BEfore Find", lastEvent.dataValues);
                     _formState[field.id] = lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
                 } else {
                     _formState[field.id] = "";
                 }
             } else if (field.type === "BOOLEAN") {
                 if (!editable && lastEvent) {
-                    console.log("BEfore Find", lastEvent.dataValues);
-                    _formState[field.id] = lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                    let lastValue = lastEvent.dataValues.find(dv => dv.dataElement === field.id);
+                    // below condition looks stupid, but required
+                    _formState[field.id] = lastValue != undefined ? (lastValue.value === 'true' || lastValue.value === true) : false;
                 } else {
-                    _formState[field.id] = "";
+                    _formState[field.id] = false;
                 }
             }
         }
@@ -121,9 +118,6 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             buttonText = "Save";
         }
     }
-
-    console.log("FS", formState);
-
 
     return (
         <Modal open>

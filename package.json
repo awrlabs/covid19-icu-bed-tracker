@@ -23,7 +23,6 @@
     "@fortawesome/react-fontawesome": "^0.1.9",
     "@react-google-maps/api": "^2.1.1",
     "@reduxjs/toolkit": "^1.2.5",
-    "dexie": "^2.0.4",
     "forerunnerdb": "^2.0.22",
     "moment": "^2.24.0",
     "react-redux": "^7.2.0",

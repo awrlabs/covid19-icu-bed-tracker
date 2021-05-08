@@ -357,7 +357,7 @@ function ViewConfigureBeds({ onBack }) {
     const onRemoveBed = (bed) => {
         confirmation.show("Do you really want to remove this bed?",
             () => {
-                dispatch(removeBed(activeICU.id, bed.enrollments[0].enrollment));
+                dispatch(removeBed(activeICU.id, bed.enrollments[0].enrollment, bed.trackedEntityInstance));
             },
             () => { }
         );

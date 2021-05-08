@@ -126,6 +126,53 @@ export function getLastEvent(teiId) {
     return undefined;
 }
 
+export function removeBed(teiId, removeEvents = false) {
+    bedsCollection.remove({ trackedEntityInstance: { $eq: teiId } });
+    if (removeEvents) {
+        bedEventsCollection.remove({
+            trackedEntityInstance: {
+                $eq: teiId
+            }
+        });
+    }
+}
+
+export function upsertBed(teiId, tei) {
+    let atts = new Map();
+    tei.attributes.forEach(att => {
+        atts.set(att.attribute, att);
+    });
+
+    let enrollments = tei.enrollments;
+
+    let found = bedsCollection.find({ trackedEntityInstance: { $eq: teiId } });
+    if (found.length > 0) {
+        found = found[0];
+        removeBed(teiId);
+
+        found.attributes.forEach(att => {
+            if (!atts.has(att.attribute)) {
+                atts.set(att.attribute, att);
+            }
+        });
+
+        enrollments = found.enrollments;
+    }
+
+    let finalObject = {
+        trackedEntityInstance: teiId,
+        orgUnit: tei.orgUnit,
+        attributes: Array.from(atts.values()),
+        enrollments: enrollments || []
+    };
+
+    for (let key of atts.keys()) {
+        finalObject[key] = atts.get(key).value;
+    }
+
+    bedsCollection.insert(finalObject);
+}
+
 function asyncInsert(collection, data) {
     return new Promise((resolve, reject) => {
         collection.insert(data, (result) => {
@@ -152,7 +199,7 @@ export default function DataStore({ children }) {
             resource: 'trackedEntityInstances',
             params: {
                 ouMode: "ACCESSIBLE",
-                fields: "trackedEntityInstance,attributes[attribute,value],orgUnit",
+                fields: "trackedEntityInstance,attributes[attribute,value],orgUnit,enrollments",
                 trackedEntityType: BED_TEI_TYPE,
                 paging: "false"
             },

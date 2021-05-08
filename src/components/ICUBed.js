@@ -58,7 +58,7 @@ export default function ICUBed({
                                     <div onClick={() => { setOpen(false); onDischarge() }}>Discharge</div>
                                 }
                                 {status == "OCCUPIED" &&
-                                    <div onClick={() => { setOpen(false); onStatusChange() }}>Change Status</div>
+                                    <div onClick={() => { setOpen(false); onStatusChange() }}>Equip</div>
                                 }
                                 <div onClick={onView}>View</div>
                                 {hasEditPerm && (status === "OCCUPIED" || status === "RESERVED") &&

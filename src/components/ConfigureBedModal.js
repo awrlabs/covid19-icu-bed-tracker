@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
     Modal, ModalTitle, ModalActions, ModalContent, ButtonStrip, Button,
     InputField, SingleSelect, RadioGroup, Radio, RadioGroupField, SingleSelectOption, SingleSelectField
-    
+
 } from '@dhis2/ui-core';
 import { useSelector, useDispatch } from 'react-redux';
 import * as moment from 'moment';
@@ -37,17 +37,17 @@ const infoAttributes = [
     "XYNBoDZS0aV"
 ]
 
-function findAttribute(attributes, id){
+function findAttribute(attributes, id) {
     const search = attributes.filter(a => a.attribute === id);
     return search.length > 0 ? search[0].value : null;
 }
 
-function findOption(optionSet, code){
+function findOption(optionSet, code) {
     const search = optionSet.filter(o => o.code === code);
     return search[0];
 }
 
-export default function ConfigureBedModal({ open, onClose, selectedBed, editable }){
+export default function ConfigureBedModal({ open, onClose, selectedBed, editable }) {
     const metaData = useSelector(state => state.app.metaData);
     const activeICU = useSelector(state => state.app.activeICU);
 
@@ -58,47 +58,47 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if(metaData){
+        if (metaData) {
             let _bedAttributes = metaData.trackedEntityType.trackedEntityTypeAttributes;
             let _formState = {};
-            for(var attrib of _bedAttributes){
+            for (var attrib of _bedAttributes) {
                 // check if this is a update thing
                 let bedValue = null;
-                if(selectedBed){
+                if (selectedBed) {
                     bedValue = findAttribute(selectedBed.attributes, attrib.id);
                 }
 
-                if(attrib.valueType === "TEXT"){
-                    if(attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0){
-                        if(bedValue){
+                if (attrib.valueType === "TEXT") {
+                    if (attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0) {
+                        if (bedValue) {
                             const option = findOption(attrib.optionSet.options, bedValue);
                             _formState[attrib.id] = {
                                 "label": option.displayName,
                                 "value": option.code
                             }
-                        }else{
+                        } else {
                             _formState[attrib.id] = {
                                 "label": attrib.optionSet.options[0].displayName,
                                 "value": attrib.optionSet.options[0].code
                             }
-                        }   
-                    }else{
+                        }
+                    } else {
                         _formState[attrib.id] = bedValue ? bedValue : "";
                     }
-                }else if(attrib.valueType === "BOOLEAN"){
+                } else if (attrib.valueType === "BOOLEAN") {
                     _formState[attrib.id] = {
                         "label": bedValue && bedValue === "true" ? "Yes" : "No",
                         "value": bedValue ? bedValue : "false"
                     }
                 }
             }
-            
+
             setFormState(_formState);
             setBedAttributtes(_bedAttributes)
         }
     }, [metaData]);
-    
-    if(!open){
+
+    if (!open) {
         return <></>
     }
 
@@ -112,27 +112,27 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
     const getAttributeInput = (attribId, key) => {
 
         const attrib = bedAttributes.find(b => b.id === attribId);
-        
-        if(attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0){
+
+        if (attrib.optionSet && attrib.optionSet.options && attrib.optionSet.options.length > 0) {
             return (
                 <SingleSelectField
                     key={key}
-                    label={attrib.formName} 
-                    name={attrib.id} 
+                    label={attrib.formName}
+                    name={attrib.id}
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
                     disabled={!editable}
-                    >
-                        {attrib.optionSet.options.map((sel, key) => 
-                            <SingleSelectOption key={key} label={sel.displayName} value={sel.code} />
-                        )}
+                >
+                    {attrib.optionSet.options.map((sel, key) =>
+                        <SingleSelectOption key={key} label={sel.displayName} value={sel.code} />
+                    )}
                 </SingleSelectField>
             )
         }
 
-        if(attrib.valueType === "TEXT"){
+        if (attrib.valueType === "TEXT") {
             return (
-                <InputField 
+                <InputField
                     key={key}
                     label={attrib.formName}
                     name={attrib.id}
@@ -144,66 +144,68 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
             )
         }
 
-        if(attrib.valueType === "BOOLEAN"){
-            
+        if (attrib.valueType === "BOOLEAN") {
+
             return (
                 <SingleSelectField
                     key={key}
-                    label={attrib.formName} 
-                    name={attrib.id} 
+                    label={attrib.formName}
+                    name={attrib.id}
                     onChange={(val) => updateField(attrib.id, val.selected)}
                     selected={formState[attrib.id]}
                     disabled={!editable}
-                    >
-                        {booleanSelections.map((sel, key) => 
-                            <SingleSelectOption key={key} label={sel.label} value={sel.value} />
-                        )}
+                >
+                    {booleanSelections.map((sel, key) =>
+                        <SingleSelectOption key={key} label={sel.label} value={sel.value} />
+                    )}
                 </SingleSelectField>
             )
-            return(<></>)
+            return (<></>)
         }
 
     }
 
     const addBed = async () => {
         const attributes = [];
-        
-        for(var attrib in formState){
+
+        for (var attrib in formState) {
             attributes.push({
                 "attribute": attrib,
                 "value": formState[attrib].value ? formState[attrib].value : formState[attrib]
             })
         }
 
-        if(selectedBed){
+        if (selectedBed) {
             // update existing bed
             dispatch(updateBed(activeICU.id, selectedBed.trackedEntityInstance, attributes))
-        }else{
+        } else {
             //create new bed
             dispatch(createBed(metaData.trackedEntityType.id, activeICU.id, metaData.id, attributes));
         }
         onClose();
     }
 
+    let modelTitle = (!editable ? "View" : selectedBed ? "Update" : "Add") + " ICU Bed";
+
     return (
         <Modal open>
             <ModalTitle>
-                { !editable ? "View" : selectedBed ? "Update" : "Add" } ICU Bed
+                {modelTitle}
             </ModalTitle>
             <ModalContent>
                 {bedAttributes.length > 0 &&
                     <div className="form">
-                        {infoAttributes.map((attrib, key) => 
+                        {infoAttributes.map((attrib, key) =>
                             getAttributeInput(attrib, key)
                         )}
-                        
+
                         <h4>Facilities</h4>
-                        {facilitiesAttributes.map((attrib, key) => 
+                        {facilitiesAttributes.map((attrib, key) =>
                             getAttributeInput(attrib, key)
                         )}
 
                         <h4>Expertise</h4>
-                        {experiseAttrbutes.map((attrib, key) => 
+                        {experiseAttrbutes.map((attrib, key) =>
                             getAttributeInput(attrib, key)
                         )}
                     </div>
@@ -218,15 +220,15 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
                     >
                         Close
                     </Button>
-                    {editable && 
+                    {editable ?
                         <Button
                             onClick={addBed}
                             primary
                             type="button"
                         >
-                            { selectedBed ? "Update Bed" : "Add New Bed" }
+                            {selectedBed ? "Update Bed" : "Add New Bed"}
                         </Button>
-                    }
+                        : null}
                 </ButtonStrip>
             </ModalActions>
         </Modal>

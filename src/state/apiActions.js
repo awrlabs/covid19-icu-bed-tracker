@@ -2,7 +2,7 @@ import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser,
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
 import { ICU_EVENT_ID } from '../constants';
-import { getBedsForIcu, swapLatestEvent } from "../components/DataStore";
+import { getBedsForIcu, swapLatestEvent, upsertBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
     let dataValue = {};
@@ -259,6 +259,9 @@ export function createBed(teID, icuId, programId, attributes) {
             const response = await dhisEngine.mutate(mutation);
             const instanceId = response.response.importSummaries[0].reference;
 
+            // add to local storage
+            upsertBed(instanceId, payload);
+
             // add new event to make the bed available
             dispatch(addBedEvent(instanceId, programId, getState().app.ICUEventId, icuId, "Discharged"));
             dispatch(getICUBeds(icuId, programId));
@@ -285,6 +288,10 @@ export function updateBed(icuId, bedId, attributes) {
                 data: payload
             };
             const response = await dhisEngine.mutate(mutation);
+
+            // update the local storage
+            upsertBed(bedId, payload);
+
             dispatch(getICUBeds(icuId, getState().app.metaData.id));
         } catch (error) {
             dispatch(showNotification({
@@ -296,7 +303,7 @@ export function updateBed(icuId, bedId, attributes) {
     }
 }
 
-export function removeBed(icuId, enrollmentId) {
+export function removeBed(icuId, enrollmentId, teiId) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             const payload = {};
@@ -305,6 +312,7 @@ export function removeBed(icuId, enrollmentId) {
                 type: 'delete'
             };
             const response = await dhisEngine.mutate(mutation);
+            removeBed(teiId, true);
             dispatch(getICUBeds(icuId, getState().app.metaData.id));
         } catch (error) {
             dispatch(showNotification({
@@ -372,7 +380,7 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                 data: payload
             };
             const response = await dhisEngine.mutate(mutation);
-            swapLatestEvent( {
+            swapLatestEvent({
                 trackedEntityInstance: teId,
                 dataValues
             });
