@@ -6,7 +6,7 @@ import {
 } from '@dhis2/ui-core';
 import { addBedEvent } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
-import { PATIENT_ATTRIBUTES, STATUS_ATTRIBUTES } from '../constants';
+import { PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION, PATIENT_SPECIALIZATION_UTLIZATION } from '../constants';
 import { getLastEvent } from './DataStore';
 
 export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable }) {
@@ -18,25 +18,27 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     const programStage = useSelector(state => state.app.ICUEventId);
     const activeICU = useSelector(state => state.app.activeICU);
 
-    const attributesSet = actionType == "status" ? STATUS_ATTRIBUTES : PATIENT_ATTRIBUTES;
+    const bedDataValuesSet = PATIENT_ATTRIBUTES;
 
-    const lastEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
+    const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes;
 
-    console.log("LE", lastEvent);
+    console.log("PAT ATT", patientAttsSet, metaData);
+
+    const lastBedEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
 
     useEffect(() => {
         let _formState = {};
-        for (var fieldId of attributesSet) {
+        for (var fieldId of bedDataValuesSet) {
             const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
             if (field.type === "TEXT") {
-                if (!editable && lastEvent) {
-                    _formState[field.id] = lastEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                if (!editable && lastBedEvent) {
+                    _formState[field.id] = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id).value;
                 } else {
                     _formState[field.id] = "";
                 }
             } else if (field.type === "BOOLEAN") {
-                if (!editable && lastEvent) {
-                    let lastValue = lastEvent.dataValues.find(dv => dv.dataElement === field.id);
+                if (!editable && lastBedEvent) {
+                    let lastValue = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id);
                     // below condition looks stupid, but required
                     _formState[field.id] = lastValue != undefined ? (lastValue.value === 'true' || lastValue.value === true) : false;
                 } else {
@@ -45,33 +47,46 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             }
         }
         setFormState(_formState);
-    }, [selectedBed]);
+    }, [selectedBed, metaData]);
 
     const updateField = (field, value) => {
-        console.log(field, value);
         setFormState({
             ...formState,
             [field]: value
         })
     }
 
-    const getFormField = (attrib, key) => {
-        const field = Object.values(metaData.dataElements).find(de => de.id === attrib);
-        if (field.type === "TEXT") {
+    const getFormField = (field) => {
+        if (field.type === "TEXT" || field.type == "INTEGER_ZERO_OR_POSITIVE") {
+            if (field.options) {
+                return (
+                    <SingleSelectField
+                        key={field.id}
+                        label={field.formName}
+                        name={field.id}
+                        onChange={(val) => updateField(field.id, val.selected)}
+                        selected={formState[field.id]}
+                        disabled={!editable}>
+                        {field.options.map((sel, key) =>
+                            <SingleSelectOption key={key} label={sel.displayName} value={sel.code} />
+                        )}
+                    </SingleSelectField>
+                )
+            }
             return (
                 <InputField
-                    key={key}
+                    key={field.id}
                     label={field.formName}
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
-                    disabled={!editable}
-                />
+                    type={field.type === "TEXT" ? "string" : "number"}
+                    disabled={!editable} />
             )
         } else if (field.type == "BOOLEAN") {
             return (
                 <Checkbox
-                    key={key}
+                    key={field.id}
                     label={field.formName}
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.checked)}
@@ -80,21 +95,42 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         }
     }
 
+    const getDataValueFormField = (attrib) => {
+        const field = Object.values(metaData.dataElements).find(de => de.id === attrib);
+        return getFormField(field);
+    }
+
+    const getPatientFormFields = (attrib) => {
+        return getFormField({
+            id: attrib.id,
+            formName: attrib.displayName,
+            type: attrib.valueType,
+            options: attrib.optionSet && attrib.optionSet.options
+        });
+    };
+
     const admitPatient = () => {
-        let dataValues = [];
+        let bedEventDataValues = [];
         for (var field in formState) {
-            dataValues.push({
-                dataElement: field,
-                value: formState[field]
-            })
+            if (PATIENT_ATTRIBUTES.indexOf(field) > 0) {
+                bedEventDataValues.push({
+                    dataElement: field,
+                    value: formState[field]
+                });
+            }
         }
 
-        console.log("Sending event", dataValues, formState);
+        let admitEventDataValues = [];
+        
 
-        if (actionType === "admit" || actionType === "status") {
-            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Admitted", dataValues));
+
+
+        console.log("Sending event", bedEventDataValues, formState);
+
+        if (actionType === "admit") {
+            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Admitted", bedEventDataValues));
         } else if (actionType === "reserve") {
-            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Reserved", dataValues));
+            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues));
         }
         onClose();
     }
@@ -112,11 +148,6 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         }
     } else {
         modelTitle = "View Patient";
-
-        if (actionType === "status") {
-            modelTitle = "Change Status";
-            buttonText = "Save";
-        }
     }
 
     return (
@@ -125,7 +156,18 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 {modelTitle}
             </ModalTitle>
             <ModalContent>
-                {attributesSet.map((attrib, key) => getFormField(attrib, key))}
+                <h4>Patient Information</h4>
+                {patientAttsSet.map((attrib) => getPatientFormFields(attrib))}
+                {bedDataValuesSet.map((attrib) => getDataValueFormField(attrib))}
+
+                <h4>Facility Utilization</h4>
+                {PATIENT_FACILITY_UTLIZATION.map((attrib) => getDataValueFormField(attrib))}
+
+                <h4>Specialists Utilization</h4>
+                {PATIENT_SPECIALIZATION_UTLIZATION.map((attrib) => getDataValueFormField(attrib))}
+
+                <h4>Clinical Parameters</h4>
+                {PATIENT_CLINICAL_PARAMETERS.map((attrib) => getDataValueFormField(attrib))}
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>

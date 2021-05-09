@@ -39,7 +39,7 @@ function ViewOrgICU() {
     let expertiseFilterData = null;
     let fascilitiesFilterData = null;
     if (metaData) {
-        let attMap = new Map(metaData.trackedEntityType.trackedEntityTypeAttributes.map(att => [att.id, att]));
+        let attMap = new Map(metaData.beds.trackedEntityType.trackedEntityTypeAttributes.map(att => [att.id, att]));
         bedTypeData = attMap.get(ATT_BED_TYPE);
         covidTypeData = attMap.get(ATT_COVID_TYPE);
         expertiseFilterData = EXPERTISE_ATTRIBUTES.map(ex => attMap.get(ex));
@@ -183,9 +183,9 @@ function ViewICUBeds() {
 
     useEffect(() => {
         if (metaData) {
-            dispatch(getICUBeds(activeICU.id, metaData.id));
+            dispatch(getICUBeds(activeICU.id, metaData.beds.id));
             dispatch(getActiveICData(activeICU.id));
-            if (hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)) {
+            if (hasPerm(ACTIONS.ADD_EVENT, activeUser, metaData.beds.programAccess, metaData.beds.trackedEntityType.access, activeICU.id)) {
                 setEventPerm(true);
             }
         }
@@ -224,7 +224,7 @@ function ViewICUBeds() {
 
     const onDischargeBed = (bed) => {
         confirmation.show("Do you want to confirm discharging this bed?",
-            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.id, programStage, activeICU.id, "Discharged")),
+            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged")),
             () => { }
         );
     }
@@ -243,7 +243,7 @@ function ViewICUBeds() {
     const getAttributeText = (bed, attribId, key) => {
         if (bed.attributes.find(a => a.attribute === attribId).value === "true") {
             return (
-                <p key={key}>{metaData.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
+                <p key={key}>{metaData.beds.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
             )
         }
         return "";
@@ -253,7 +253,7 @@ function ViewICUBeds() {
         <>
             <div className="inner-header">
                 <span className="t20">Showing ICU Bed status at <b>{activeOrgUnit.name}</b></span>
-                {hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id) &&
+                {hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.beds.programAccess, metaData.beds.trackedEntityType.access, activeICU.id) &&
                     <Button onClick={() => setShowConfigure(true)} className="pull-right">Configure Beds</Button>
                 }
             </div>
@@ -301,7 +301,7 @@ function ViewICUBeds() {
                                     onViewPatient={() => onViewPatient(bed)}
                                     onStatusChange={() => onStatusChange(bed)}
                                     hasEventPerm={eventPerm}
-                                    hasEditPerm={hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.programAccess, metaData.trackedEntityType.access, activeICU.id)}
+                                    hasEditPerm={hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.beds.programAccess, metaData.beds.trackedEntityType.access, activeICU.id)}
                                 />
                             ))}
                         </div>

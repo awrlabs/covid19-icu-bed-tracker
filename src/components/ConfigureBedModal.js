@@ -59,7 +59,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
 
     useEffect(() => {
         if (metaData) {
-            let _bedAttributes = metaData.trackedEntityType.trackedEntityTypeAttributes;
+            let _bedAttributes = metaData.beds.trackedEntityType.trackedEntityTypeAttributes;
             let _formState = {};
             for (var attrib of _bedAttributes) {
                 // check if this is a update thing
@@ -180,7 +180,7 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
             dispatch(updateBed(activeICU.id, selectedBed.trackedEntityInstance, attributes))
         } else {
             //create new bed
-            dispatch(createBed(metaData.trackedEntityType.id, activeICU.id, metaData.id, attributes));
+            dispatch(createBed(metaData.beds.trackedEntityType.id, activeICU.id, metaData.beds.id, attributes));
         }
         onClose();
     }

@@ -71,12 +71,50 @@ export function getActiveUser() {
 }
 
 export function getMetaData() {
+    function processProgram(metaData, program) {
+        metaData.id = program.id;
+        metaData.name = program.name;
+        metaData.trackedEntityType = {
+            id: program.trackedEntityType.id,
+            displayName: program.trackedEntityType.displayName,
+            trackedEntityTypeAttributes: []
+        };
+
+        let programAccess = {};
+        for (var ga of program.userGroupAccesses) {
+            programAccess[ga.userGroupUid] = {
+                canRead: ga.access.startsWith("rw"),
+                canWrite: ga.access.startsWith("rwrw")
+            }
+        }
+        metaData['programAccess'] = programAccess;
+
+        for (var attrib of program.trackedEntityType.trackedEntityTypeAttributes) {
+            metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
+        }
+
+        let teAccess = {};
+        for (var ga of program.trackedEntityType.userGroupAccesses) {
+            teAccess[ga.userGroupUid] = {
+                canRead: ga.access.startsWith("rw"),
+                canWrite: ga.access.startsWith("rwrw")
+            }
+        }
+        metaData.trackedEntityType['access'] = teAccess;
+    }
+
     return async (dispatch, getState, dhisEngine) => {
         try {
 
             const query = {
-                program: {
+                programBeds: {
                     resource: 'programs/C1wTfmmMQUn',
+                    params: {
+                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]]"
+                    },
+                },
+                programPatients: {
+                    resource: 'programs/T3NPzGcARCj',
                     params: {
                         fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]]"
                     },
@@ -90,38 +128,14 @@ export function getMetaData() {
                     },
                 }
             }
-            const { program, dataElements } = await dhisEngine.query(query);
+            const { programBeds, programPatients, dataElements } = await dhisEngine.query(query);
             let metaData = {
-                id: program.id,
-                name: program.name,
-                trackedEntityType: {
-                    id: program.trackedEntityType.id,
-                    displayName: program.trackedEntityType.displayName,
-                    trackedEntityTypeAttributes: []
-                }
+                beds: {},
+                patients: {},
             };
 
-            let programAccess = {};
-            for (var ga of program.userGroupAccesses) {
-                programAccess[ga.userGroupUid] = {
-                    canRead: ga.access.startsWith("rw"),
-                    canWrite: ga.access.startsWith("rwrw")
-                }
-            }
-            metaData['programAccess'] = programAccess;
-
-            for (var attrib of program.trackedEntityType.trackedEntityTypeAttributes) {
-                metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
-            }
-
-            let teAccess = {};
-            for (var ga of program.trackedEntityType.userGroupAccesses) {
-                teAccess[ga.userGroupUid] = {
-                    canRead: ga.access.startsWith("rw"),
-                    canWrite: ga.access.startsWith("rwrw")
-                }
-            }
-            metaData.trackedEntityType['access'] = teAccess;
+            processProgram(metaData.beds, programBeds);
+            processProgram(metaData.patients, programPatients);
 
             let _dataElements = {};
 
@@ -292,7 +306,7 @@ export function updateBed(icuId, bedId, attributes) {
             // update the local storage
             upsertBed(bedId, payload);
 
-            dispatch(getICUBeds(icuId, getState().app.metaData.id));
+            dispatch(getICUBeds(icuId, getState().app.metaData.beds.id));
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in updating bed',
@@ -313,7 +327,7 @@ export function removeBed(icuId, enrollmentId, teiId) {
             };
             const response = await dhisEngine.mutate(mutation);
             removeBed(teiId, true);
-            dispatch(getICUBeds(icuId, getState().app.metaData.id));
+            dispatch(getICUBeds(icuId, getState().app.metaData.beds.id));
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in deleting bed',
