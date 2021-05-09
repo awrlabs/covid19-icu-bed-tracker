@@ -4,9 +4,9 @@ import {
     InputField, SingleSelect, RadioGroup, Radio, RadioGroupField, SingleSelectOption, SingleSelectField,
     Checkbox
 } from '@dhis2/ui-core';
-import { addBedEvent } from '../state/apiActions';
+import { addBedEvent, createPatient } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
-import { PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION, PATIENT_SPECIALIZATION_UTLIZATION } from '../constants';
+import { DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION, PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS } from '../constants';
 import { getLastEvent } from './DataStore';
 
 export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable }) {
@@ -22,23 +22,23 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
     const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes;
 
-    console.log("PAT ATT", patientAttsSet, metaData);
-
     const lastBedEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
+
+    console.log("LBED", lastBedEvent);
 
     useEffect(() => {
         let _formState = {};
         for (var fieldId of bedDataValuesSet) {
             const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
+            let lastValue = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id);
             if (field.type === "TEXT") {
                 if (!editable && lastBedEvent) {
-                    _formState[field.id] = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id).value;
+                    _formState[field.id] = lastValue != undefined ? lastValue.value : "";
                 } else {
                     _formState[field.id] = "";
                 }
             } else if (field.type === "BOOLEAN") {
                 if (!editable && lastBedEvent) {
-                    let lastValue = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id);
                     // below condition looks stupid, but required
                     _formState[field.id] = lastValue != undefined ? (lastValue.value === 'true' || lastValue.value === true) : false;
                 } else {
@@ -80,7 +80,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
-                    type={field.type === "TEXT" ? "string" : "number"}
+                    type={field.type === "TEXT" ? "text" : "number"}
                     disabled={!editable} />
             )
         } else if (field.type == "BOOLEAN") {
@@ -90,14 +90,15 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     label={field.formName}
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.checked)}
-                    checked={formState[field.id]} />
+                    checked={formState[field.id]}
+                    disabled={!editable} />
             )
         }
     }
 
     const getDataValueFormField = (attrib) => {
         const field = Object.values(metaData.dataElements).find(de => de.id === attrib);
-        return getFormField(field);
+        return field && getFormField(field);
     }
 
     const getPatientFormFields = (attrib) => {
@@ -111,28 +112,51 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
     const admitPatient = () => {
         let bedEventDataValues = [];
+
+        let admitEventDataValues = [];
+
+        let patientAttributes = [];
+
         for (var field in formState) {
-            if (PATIENT_ATTRIBUTES.indexOf(field) > 0) {
+            let value = formState[field].value ? formState[field].value : formState[field];
+            if (PATIENT_ATTRIBUTES.indexOf(field) >= 0) {
                 bedEventDataValues.push({
                     dataElement: field,
-                    value: formState[field]
+                    value
+                });
+            } else if (PATIENT_FACILITY_UTLIZATION.indexOf(field) >= 0
+                || PATIENT_SPECIALIZATION_UTLIZATION.indexOf(field) >= 0
+                || PATIENT_CLINICAL_PARAMETERS.indexOf(field) >= 0) {
+                admitEventDataValues.push({
+                    dataElement: field,
+                    value
+                });
+            } else if (patientAttsSet.find(att => att.id === field)) {
+                patientAttributes.push({
+                    attribute: field,
+                    value
                 });
             }
         }
 
-        let admitEventDataValues = [];
-        
+        // first save the patient and admit event
 
+        console.log("Savig", patientAttributes, admitEventDataValues);
 
+        dispatch(createPatient(PATIENT_TEI_TYPE, activeICU.id, PROGRAM_PATIENTS, patientAttributes, admitEventDataValues, (patientId) => {
+            // save the bed admit event
+            bedEventDataValues.push({
+                dataElement: DATA_ELEMENT_TEI_ID,
+                value: patientId
+            });
 
-        console.log("Sending event", bedEventDataValues, formState);
-
-        if (actionType === "admit") {
-            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Admitted", bedEventDataValues));
-        } else if (actionType === "reserve") {
-            dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues));
-        }
-        onClose();
+            if (actionType === "admit") {
+                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Admitted", bedEventDataValues));
+            } else if (actionType === "reserve") {
+                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues));
+            }
+            onClose();
+        }, onClose));
     }
 
     let modelTitle = "";

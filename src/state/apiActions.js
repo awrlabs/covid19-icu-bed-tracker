@@ -1,7 +1,7 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-import { ICU_EVENT_ID } from '../constants';
+import { ICU_EVENT_ID, PROGRAM_STAGE_PATIENT_ADMIT } from '../constants';
 import { getBedsForIcu, swapLatestEvent, upsertBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
@@ -89,8 +89,20 @@ export function getMetaData() {
         }
         metaData['programAccess'] = programAccess;
 
+        let attribsSet = new Set();
+
         for (var attrib of program.trackedEntityType.trackedEntityTypeAttributes) {
             metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
+            attribsSet.add(attrib.trackedEntityAttribute.id);
+        }
+
+        // merging TEI atts and Program Atts
+        if (program.programTrackedEntityAttributes) {
+            for (var attrib of program.programTrackedEntityAttributes) {
+                if (!attribsSet.has(attrib.trackedEntityAttribute.id)) {
+                    metaData.trackedEntityType.trackedEntityTypeAttributes.push(attrib.trackedEntityAttribute);
+                }
+            }
         }
 
         let teAccess = {};
@@ -116,7 +128,7 @@ export function getMetaData() {
                 programPatients: {
                     resource: 'programs/T3NPzGcARCj',
                     params: {
-                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]]"
+                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]],programTrackedEntityAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]"
                     },
                 },
                 dataElements: {
@@ -339,7 +351,6 @@ export function removeBed(icuId, enrollmentId, teiId) {
 }
 
 export function addBedEvent(teId, programId, programStageId, icuId, eventType, additionalData = []) {
-    // todo update local status
     return async (dispatch, getState, dhisEngine) => {
         try {
             // first we complete last event
@@ -433,6 +444,108 @@ export function getActiveICData(icuId) {
                 type: 'error'
             }))
             console.log("Error in creating:", error)
+        }
+    }
+}
+
+/*  PATIENT */
+
+export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = []) {
+    return async (dispatch, getState, dhisEngine) => {
+        try {
+            // first we complete last event
+            const query = {
+                events: {
+                    resource: 'events',
+                    params: {
+                        trackedEntityInstance: teId,
+                        paging: "false",
+                        status: "ACTIVE"
+                    }
+                }
+            }
+            const eventResponse = await dhisEngine.query(query);
+            if (eventResponse.events.events.length > 0) {
+                const lastEvent = eventResponse.events.events[0];
+                const updatePayload = {
+                    "event": lastEvent.event,
+                    "trackedEntityInstance": teId,
+                    "program": programId,
+                    "programStage": programStageId,
+                    "enrollment": icuId,
+                    "orgUnit": icuId,
+                    "completedDate": moment().format("YYYY-MM-DD"),
+                    "status": "COMPLETED"
+                };
+                const updateMutation = {
+                    resource: 'events',
+                    type: 'create',
+                    data: updatePayload
+                };
+                await dhisEngine.mutate(updateMutation);
+            }
+
+            const payload = {
+                "trackedEntityInstance": teId,
+                "program": programId,
+                "programStage": programStageId,
+                "enrollment": icuId,
+                "orgUnit": icuId,
+                "dataValues": dataValues,
+                "eventDate": moment().format("YYYY-MM-DD"),
+                "status": "ACTIVE"
+            };
+            const mutation = {
+                resource: 'events',
+                type: 'create',
+                data: payload
+            };
+            const response = await dhisEngine.mutate(mutation);
+        } catch (error) {
+            dispatch(showNotification({
+                message: 'error in adding patient event',
+                type: 'error'
+            }))
+            console.log("Error in creating:", error)
+        }
+    }
+}
+
+export function createPatient(teTypeID, icuId, programId, attributes, admitDataValues, cb, error_cb) {
+    return async (dispatch, getState, dhisEngine) => {
+        try {
+            const payload = {
+                "trackedEntityType": teTypeID,
+                "orgUnit": icuId,
+                "attributes": attributes,
+                "enrollments": [
+                    {
+                        "orgUnit": icuId,
+                        "program": programId,
+                        "enrollmentDate": moment().format("YYYY-MM-DD"),
+                        "incidentDate": moment().format("YYYY-MM-DD")
+                    }
+                ]
+            };
+            const mutation = {
+                resource: 'trackedEntityInstances',
+                type: 'create',
+                data: payload
+            };
+            const response = await dhisEngine.mutate(mutation);
+            const instanceId = response.response.importSummaries[0].reference;
+
+            console.log("Saved TEI", response);
+
+            await dispatch(addPatientEvent(instanceId, programId, PROGRAM_STAGE_PATIENT_ADMIT, icuId, admitDataValues));
+            cb(instanceId);
+        } catch (error) {
+            dispatch(showNotification({
+                message: 'error in creating patient',
+                type: 'error'
+            }))
+            console.log("Error in creating:", error)
+            error_cb();
         }
     }
 }

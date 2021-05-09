@@ -17,7 +17,7 @@ export const FACILITIES_ATTRIBUTES = [
 
 export const PATIENT_ATTRIBUTES = [
     "j1hbO7zzRgV",
-    "sK09QRLNyAA",
+    // "sK09QRLNyAA",
     "malZQqUEzi9",
     "qh9bc6jlauE"
 ];
@@ -66,3 +66,9 @@ export const SUPER_ADMIN_GROUP = "LkEkMDG0zfj";
 export const PROGRAM = "C1wTfmmMQUn";
 
 export const BED_TEI_TYPE = "VusKORm3ZGL";
+export const PATIENT_TEI_TYPE = "SXtGAk7eCxX";
+
+export const PROGRAM_PATIENTS = "T3NPzGcARCj";
+export const PROGRAM_STAGE_PATIENT_ADMIT = "i8U1RC59csO";
+
+export const DATA_ELEMENT_TEI_ID = "lgieRGGJEKu";
