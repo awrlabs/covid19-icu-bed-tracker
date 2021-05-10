@@ -1,7 +1,7 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-import { ICU_EVENT_ID, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
+import { ICU_EVENT_ID, PROGRAM, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
 import { getBedsForIcu, swapLatestEvent, upsertBed, removeBed as removeCachedBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
@@ -331,7 +331,9 @@ export function removeBed(icuId, enrollmentId, teiId) {
             const payload = {
                 status: "COMPLETED",
                 enrollment: enrollmentId,
-                orgUnit: icuId
+                orgUnit: icuId,
+                trackedEntityInstance: teiId,
+                program: PROGRAM
             };
             const mutation = {
                 resource: 'enrollments/' + enrollmentId,
