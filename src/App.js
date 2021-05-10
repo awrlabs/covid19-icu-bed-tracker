@@ -14,7 +14,7 @@ import ICUBed from './components/ICUBed';
 import ConfigureBedModal from './components/ConfigureBedModal';
 import { setActiveICU, setActiveOrgUnit, updateFilteredICUList, setFilterCriteria } from './state/appState';
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
-import { getICUBeds, getMetaData, addBedEvent, removeBed, getActiveUser, getActiveICData } from './state/apiActions';
+import { getICUBeds, getMetaData, addBedEvent, removeBed, getActiveUser, getActiveICData, completePatientEnrollment } from './state/apiActions';
 import RegisterPatientModal from './components/RegisterPatientModal';
 import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
@@ -228,7 +228,15 @@ function ViewICUBeds() {
     const onDischargeBed = (bed) => {
         console.log("Dischanrging", bed);
         confirmation.show("Do you want to confirm discharging this bed?",
-            () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged")),
+            () => {
+                let lastEvent = getLastEvent(bed.trackedEntityInstance);
+                let teiId = lastEvent.dataValues.find(dv => dv.dataElement === DATA_ELEMENT_TEI_ID);
+                if (teiId) {
+                    // complete patient enrollment
+                    dispatch(completePatientEnrollment(teiId.value));
+                }
+                dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged"))
+            },
             () => { }
         );
     }

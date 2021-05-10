@@ -1,7 +1,7 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-import { ICU_EVENT_ID, PROGRAM, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
+import { ICU_EVENT_ID, PROGRAM, PROGRAM_PATIENTS, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
 import { getBedsForIcu, swapLatestEvent, upsertBed, removeBed as removeCachedBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
@@ -348,7 +348,7 @@ export function removeBed(icuId, enrollmentId, teiId) {
                 message: 'error in deleting bed',
                 type: 'error'
             }))
-            console.error("Error in creating:", error)
+            console.error("Error in completing bed enrollment:", error)
         }
     }
 }
@@ -452,6 +452,48 @@ export function getActiveICData(icuId) {
 }
 
 /*  PATIENT */
+export function completePatientEnrollment(patientId) {
+    return async (dispatch, getState, dhisEngine) => {
+        try {
+            const query = {
+                enrollments: {
+                    resource: 'enrollments',
+                    params: {
+                        trackedEntityInstance: patientId,
+                        program: PROGRAM_PATIENTS,
+                        ouMode: "ACCESSIBLE"
+                    }
+                }
+            }
+            const enrollmentResponse = await dhisEngine.query(query);
+            if (enrollmentResponse.enrollments) {
+                for (let en of enrollmentResponse.enrollments.enrollments) {
+                    const payload = {
+                        status: "COMPLETED",
+                        enrollment: en.enrollment,
+                        orgUnit: en.orgUnit,
+                        trackedEntityInstance: en.trackedEntityInstance,
+                        program: en.program
+                    };
+                    const mutation = {
+                        resource: 'enrollments/' + en.enrollment,
+                        type: 'update',
+                        data: payload
+                    };
+                    const response = await dhisEngine.mutate(mutation);
+                }
+            }
+            console.log(enrollmentResponse);
+        } catch (error) {
+            dispatch(showNotification({
+                message: 'error in completing patient enrollment',
+                type: 'error'
+            }))
+            console.error("Error in completing patient enrollment:", error)
+        }
+    }
+}
+
 export function addBedPatientRelationship(bedId, patientId) {
     return async (dispatch, getState, dhisEngine) => {
         try {
