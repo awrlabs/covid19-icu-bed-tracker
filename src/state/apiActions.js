@@ -1,8 +1,8 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-import { ICU_EVENT_ID, PROGRAM_STAGE_PATIENT_ADMIT } from '../constants';
-import { getBedsForIcu, swapLatestEvent, upsertBed } from "../components/DataStore";
+import { ICU_EVENT_ID, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
+import { getBedsForIcu, swapLatestEvent, upsertBed, removeBed as removeCachedBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
     let dataValue = {};
@@ -44,7 +44,6 @@ export function getActiveUser() {
             if (user.organisationUnits && user.organisationUnits.length > 0) {
                 if (user.organisationUnits[0].level === 5) {
                     let parentOu = user.organisationUnits[0].parent;
-                    console.log("Parent OU", parentOu)
                     originId = parentOu.id;
                     origin = (parentOu.geometry
                         && parentOu.geometry.type === "Point") ?
@@ -65,7 +64,7 @@ export function getActiveUser() {
                 message: 'Error loading user',
                 type: 'error'
             }))
-            console.log("Error in query:", error)
+            console.error("Error in query:", error)
         }
     }
 }
@@ -175,7 +174,7 @@ export function getMetaData() {
                 message: 'failed to load metadata',
                 type: 'error'
             }))
-            console.log("Error in query:", error)
+            console.error("Error in query:", error)
         }
     }
 }
@@ -187,7 +186,6 @@ export function getICUBeds(icuId, program) {
 
             const beds = getBedsForIcu(icuId);
 
-            console.log("Beds", beds);
             // now get status of each
             for (var bed of beds) {
                 dispatch(getBedStatus(bed.trackedEntityInstance));
@@ -201,7 +199,7 @@ export function getICUBeds(icuId, program) {
                 message: 'failed to load icu bed data',
                 type: 'error'
             }))
-            console.log("Error in query:", error)
+            console.error("Error in query:", error)
         }
     }
 }
@@ -252,8 +250,6 @@ export function getBedStatus(instanceId) {
             status = "AVAILABLE";
         }
 
-        // console.log("LE", lastEvent);
-
         dispatch(updateBedStatus({
             bedId: instanceId,
             status: status
@@ -296,7 +292,7 @@ export function createBed(teID, icuId, programId, attributes) {
                 message: 'error in creating bed',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
@@ -324,7 +320,7 @@ export function updateBed(icuId, bedId, attributes) {
                 message: 'error in updating bed',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
@@ -332,20 +328,25 @@ export function updateBed(icuId, bedId, attributes) {
 export function removeBed(icuId, enrollmentId, teiId) {
     return async (dispatch, getState, dhisEngine) => {
         try {
-            const payload = {};
+            const payload = {
+                status: "COMPLETED",
+                enrollment: enrollmentId,
+                orgUnit: icuId
+            };
             const mutation = {
                 resource: 'enrollments/' + enrollmentId,
-                type: 'delete'
+                type: 'update',
+                data: payload
             };
             const response = await dhisEngine.mutate(mutation);
-            removeBed(teiId, true);
+            removeCachedBed(teiId, true);
             dispatch(getICUBeds(icuId, getState().app.metaData.beds.id));
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in deleting bed',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
@@ -415,7 +416,7 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                 message: 'error in adding bed event',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
@@ -443,12 +444,43 @@ export function getActiveICData(icuId) {
                 message: 'error in retrieving ICU data',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
 
 /*  PATIENT */
+export function addBedPatientRelationship(bedId, patientId) {
+    return async (dispatch, getState, dhisEngine) => {
+        try {
+            // first we complete last event
+            const query = {
+                resource: 'relationships',
+                type: 'create',
+                data: {
+                    "relationshipType": RELATIONSHIP_BED_PATIENT,
+                    "from": {
+                        "trackedEntityInstance": {
+                            "trackedEntityInstance": bedId
+                        }
+                    },
+                    "to": {
+                        "trackedEntityInstance": {
+                            "trackedEntityInstance": patientId
+                        }
+                    }
+                }
+            }
+            const response = await dhisEngine.mutate(query);
+        } catch (error) {
+            dispatch(showNotification({
+                message: 'error in adding patient event',
+                type: 'error'
+            }))
+            console.error("Error in creating:", error)
+        }
+    }
+}
 
 export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = []) {
     return async (dispatch, getState, dhisEngine) => {
@@ -506,7 +538,7 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
                 message: 'error in adding patient event',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
         }
     }
 }
@@ -535,8 +567,6 @@ export function createPatient(teTypeID, icuId, programId, attributes, admitDataV
             const response = await dhisEngine.mutate(mutation);
             const instanceId = response.response.importSummaries[0].reference;
 
-            console.log("Saved TEI", response);
-
             await dispatch(addPatientEvent(instanceId, programId, PROGRAM_STAGE_PATIENT_ADMIT, icuId, admitDataValues));
             cb(instanceId);
         } catch (error) {
@@ -544,7 +574,7 @@ export function createPatient(teTypeID, icuId, programId, attributes, admitDataV
                 message: 'error in creating patient',
                 type: 'error'
             }))
-            console.log("Error in creating:", error)
+            console.error("Error in creating:", error)
             error_cb();
         }
     }

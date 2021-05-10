@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Provider, useSelector, useDispatch } from 'react-redux';
-import { DataQuery, useDataQuery, useDataEngine } from '@dhis2/app-runtime'
+import { DataQuery, useDataQuery, useDataEngine, useConfig } from '@dhis2/app-runtime'
 import i18n from '@dhis2/d2-i18n'
 import OrgUnits from './components/OrgUnits'
 import './App.css';
@@ -20,8 +20,9 @@ import useConfirmation from './components/useConfirmationHook';
 import ICUMap from './components/ICUMap'
 import Notification from './components/Notification'
 import { hasPerm, ACTIONS } from './components/permissionUtils';
-import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE, ATT_BED_NUMBER } from './constants';
-import DataStore, { getICUsForParent } from "./components/DataStore";
+import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE, ATT_BED_NUMBER, DATA_ELEMENT_TEI_ID, PROGRAM_PATIENTS } from './constants';
+import DataStore, { getICUsForParent, getLastEvent, removeBed as removeCachedBed } from "./components/DataStore";
+import { showNotification } from './state/notificationState';
 
 function ViewOrgICU() {
 
@@ -178,6 +179,8 @@ function ViewICUBeds() {
     const [eventPerm, setEventPerm] = useState(false);
     const [patientEditable, setPatientEditable] = useState(true);
 
+    const { baseUrl } = useConfig();
+
     const dispatch = useDispatch();
     const confirmation = useConfirmation();
 
@@ -223,6 +226,7 @@ function ViewICUBeds() {
     }
 
     const onDischargeBed = (bed) => {
+        console.log("Dischanrging", bed);
         confirmation.show("Do you want to confirm discharging this bed?",
             () => dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged")),
             () => { }
@@ -230,10 +234,21 @@ function ViewICUBeds() {
     }
 
     const onViewPatient = (bed) => {
-        setSelectedBed(bed);
-        setPatientEditable(false);
-        setPatientModalAction("view");
-        setPatientModalOpen(true);
+        let lastEvent = getLastEvent(bed.trackedEntityInstance);
+        let teiId = lastEvent.dataValues.find(dv => dv.dataElement === DATA_ELEMENT_TEI_ID);
+        if (teiId) {
+            window.open(`${baseUrl}/dhis-web-tracker-capture/index.html#/dashboard?tei=${teiId.value}&program=${PROGRAM_PATIENTS}&ou=${bed.orgUnit}`, '_blank');
+        } else {
+            dispatch(showNotification({
+                message: "Couldn't determine a valid patient assignment for this bed",
+                type: 'error'
+            }));
+        }
+        console.log("View Patient", bed, lastEvent, teiId, baseUrl);
+        // setSelectedBed(bed);
+        // setPatientEditable(false);
+        // setPatientModalAction("view");
+        // setPatientModalOpen(true);
     }
 
     if (!activeOrgUnit) {

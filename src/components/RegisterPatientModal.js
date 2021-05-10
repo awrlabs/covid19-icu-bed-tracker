@@ -4,7 +4,7 @@ import {
     InputField, SingleSelect, RadioGroup, Radio, RadioGroupField, SingleSelectOption, SingleSelectField,
     Checkbox
 } from '@dhis2/ui-core';
-import { addBedEvent, createPatient } from '../state/apiActions';
+import { addBedEvent, addBedPatientRelationship, createPatient } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
 import { DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION, PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS } from '../constants';
 import { getLastEvent } from './DataStore';
@@ -23,8 +23,6 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes;
 
     const lastBedEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
-
-    console.log("LBED", lastBedEvent);
 
     useEffect(() => {
         let _formState = {};
@@ -57,7 +55,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     }
 
     const getFormField = (field) => {
-        if (field.type === "TEXT" || field.type == "INTEGER_ZERO_OR_POSITIVE") {
+        if (field.type === "TEXT" || field.type === "INTEGER_ZERO_OR_POSITIVE" || field.type === "NUMBER" || field.type === "PHONE_NUMBER") {
             if (field.options) {
                 return (
                     <SingleSelectField
@@ -80,7 +78,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
-                    type={field.type === "TEXT" ? "text" : "number"}
+                    type={(field.type === "TEXT" || field.type === "PHONE_NUMBER") ? "text" : "number"}
                     disabled={!editable} />
             )
         } else if (field.type == "BOOLEAN") {
@@ -155,6 +153,9 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             } else if (actionType === "reserve") {
                 dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues));
             }
+
+            // adding relationship
+            dispatch(addBedPatientRelationship(selectedBed.trackedEntityInstance, patientId));
             onClose();
         }, onClose));
     }

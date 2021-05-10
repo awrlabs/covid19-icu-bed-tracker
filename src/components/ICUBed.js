@@ -59,7 +59,7 @@ export default function ICUBed({
                                 }
                                 <div onClick={onView}>View Bed</div>
                                 {hasEditPerm && (status === "OCCUPIED" || status === "RESERVED") &&
-                                    <div onClick={onViewPatient}>View Patient</div>
+                                    <div onClick={onViewPatient}>Manage Patient</div>
                                 }
                             </div>
                         </Popper>

@@ -246,7 +246,9 @@ export default function DataStore({ children }) {
 
             Promise.all([
                 asyncInsert(
-                    bedsCollection, data.beds.trackedEntityInstances.map(te => {
+                    bedsCollection, data.beds.trackedEntityInstances.filter((te) => {
+                        return te.enrollments.length > 0;
+                    }).map(te => {
                         te.attributes && te.attributes.forEach(at => {
                             te[at.attribute] = at.value;
                         });
