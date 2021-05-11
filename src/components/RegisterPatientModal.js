@@ -6,7 +6,10 @@ import {
 } from '@dhis2/ui-core';
 import { addBedEvent, addBedPatientRelationship, createPatient } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
-import { DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION, PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS } from '../constants';
+import {
+    DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION,
+    PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS, PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP
+} from '../constants';
 import { getLastEvent } from './DataStore';
 
 export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable }) {
@@ -44,6 +47,12 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 }
             }
         }
+
+        // setting constant fields
+        Object.keys(PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP).forEach(k => {
+            _formState[k] = selectedBed[PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[k]];
+        });
+
         setFormState(_formState);
     }, [selectedBed, metaData]);
 
@@ -55,16 +64,24 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     }
 
     const getFormField = (field) => {
+        let fieldDisabled = !editable || PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[field.id] !== undefined;
         if (field.type === "TEXT" || field.type === "INTEGER_ZERO_OR_POSITIVE" || field.type === "NUMBER" || field.type === "PHONE_NUMBER") {
             if (field.options) {
+                let selected = formState[field.id];
+                if (selected && !selected.value) {
+                    selected = {
+                        label: selected,
+                        value: selected
+                    }
+                }
                 return (
                     <SingleSelectField
                         key={field.id}
                         label={field.formName}
                         name={field.id}
                         onChange={(val) => updateField(field.id, val.selected)}
-                        selected={formState[field.id]}
-                        disabled={!editable}>
+                        selected={selected}
+                        disabled={fieldDisabled}>
                         {field.options.map((sel, key) =>
                             <SingleSelectOption key={key} label={sel.displayName} value={sel.code} />
                         )}
@@ -79,7 +96,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
                     type={(field.type === "TEXT" || field.type === "PHONE_NUMBER") ? "text" : "number"}
-                    disabled={!editable} />
+                    disabled={fieldDisabled} />
             )
         } else if (field.type == "BOOLEAN") {
             return (
@@ -89,7 +106,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.checked)}
                     checked={formState[field.id]}
-                    disabled={!editable} />
+                    disabled={fieldDisabled} />
             )
         }
     }
