@@ -15,8 +15,10 @@ export const PATIENT_TEI_TYPE = "SXtGAk7eCxX";
 
 export const PROGRAM_PATIENTS = "T3NPzGcARCj";
 export const PROGRAM_STAGE_PATIENT_ADMIT = "i8U1RC59csO";
+export const PROGRAM_STAGE_PATIENT_DISCHARGE = "NDHhoIZNcaJ";
 
 export const DATA_ELEMENT_TEI_ID = "lgieRGGJEKu";
+export const DATA_ELEMENT_DISCHARGE_OUTCOME = "EopYoUMpnID";
 
 export const RELATIONSHIP_BED_PATIENT = "BikX9ey3Qt8";
 

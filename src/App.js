@@ -23,6 +23,7 @@ import { hasPerm, ACTIONS } from './components/permissionUtils';
 import { EXPERTISE_ATTRIBUTES, FACILITIES_ATTRIBUTES, PROGRAM, ATT_BED_TYPE, ATT_COVID_TYPE, ATT_BED_NUMBER, DATA_ELEMENT_TEI_ID, PROGRAM_PATIENTS } from './constants';
 import DataStore, { getICUsForParent, getLastEvent, removeBed as removeCachedBed } from "./components/DataStore";
 import { showNotification } from './state/notificationState';
+import DischargeModal from './components/DischargeModal';
 
 function ViewOrgICU() {
 
@@ -173,6 +174,7 @@ function ViewICUBeds() {
 
     const [showConfigure, setShowConfigure] = useState(false);
     const [bedModalOpen, setBedModalOpen] = useState(false);
+    const [dischargeModalOpen, setDischargeModalOpen] = useState(false);
     const [patientModalOpen, setPatientModalOpen] = useState(false);
     const [patientModalAction, setPatientModalAction] = useState("admit");
     const [selectedBed, setSelectedBed] = useState(null);
@@ -227,18 +229,20 @@ function ViewICUBeds() {
 
     const onDischargeBed = (bed) => {
         console.log("Dischanrging", bed);
-        confirmation.show("Do you want to confirm discharging this bed?",
-            () => {
-                let lastEvent = getLastEvent(bed.trackedEntityInstance);
-                let teiId = lastEvent.dataValues.find(dv => dv.dataElement === DATA_ELEMENT_TEI_ID);
-                if (teiId) {
-                    // complete patient enrollment
-                    dispatch(completePatientEnrollment(teiId.value));
-                }
-                dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged"))
-            },
-            () => { }
-        );
+        setSelectedBed(bed);
+        setDischargeModalOpen(true);
+        // confirmation.show("Do you want to confirm discharging this bed?",
+        //     () => {
+        //         let lastEvent = getLastEvent(bed.trackedEntityInstance);
+        //         let teiId = lastEvent.dataValues.find(dv => dv.dataElement === DATA_ELEMENT_TEI_ID);
+        //         if (teiId) {
+        //             // complete patient enrollment
+        //             dispatch(completePatientEnrollment(teiId.value));
+        //         }
+        //         dispatch(addBedEvent(bed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged"))
+        //     },
+        //     () => { }
+        // );
     }
 
     const onViewPatient = (bed) => {
@@ -348,6 +352,14 @@ function ViewICUBeds() {
                     actionType={patientModalAction}
                     editable={patientEditable}
                 />
+            }
+            {
+                dischargeModalOpen &&
+                <DischargeModal
+                    selectedBed={selectedBed}
+                    onClose={() => {
+                        setDischargeModalOpen();
+                    }} />
             }
         </>
     )

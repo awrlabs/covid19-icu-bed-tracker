@@ -1,7 +1,7 @@
 import { setICUBeds, setMetaData, updateBedStatus, updateICUStat, setActiveUser, updateActiveICUData, updateICUStatRequest } from './appState';
 import * as moment from 'moment';
 import { showNotification } from './notificationState'
-import { ICU_EVENT_ID, PROGRAM, PROGRAM_PATIENTS, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT } from '../constants';
+import { ICU_EVENT_ID, PROGRAM, PROGRAM_PATIENTS, PROGRAM_STAGE_PATIENT_ADMIT, RELATIONSHIP_BED_PATIENT, PROGRAM_STAGE_PATIENT_DISCHARGE, DATA_ELEMENT_DISCHARGE_OUTCOME } from '../constants';
 import { getBedsForIcu, swapLatestEvent, upsertBed, removeBed as removeCachedBed } from "../components/DataStore";
 
 function bedEventHelper(metaData, eventType) {
@@ -452,9 +452,15 @@ export function getActiveICData(icuId) {
 }
 
 /*  PATIENT */
-export function completePatientEnrollment(patientId) {
+export function completePatientEnrollment(patientId, icuId, outcome) {
     return async (dispatch, getState, dhisEngine) => {
         try {
+            // send discharge event
+            dispatch(addPatientEvent(patientId, PROGRAM_PATIENTS, PROGRAM_STAGE_PATIENT_DISCHARGE, icuId, [{
+                dataElement: DATA_ELEMENT_DISCHARGE_OUTCOME,
+                value: outcome
+            }]));
+
             const query = {
                 enrollments: {
                     resource: 'enrollments',
@@ -483,7 +489,6 @@ export function completePatientEnrollment(patientId) {
                     const response = await dhisEngine.mutate(mutation);
                 }
             }
-            console.log(enrollmentResponse);
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in completing patient enrollment',
@@ -541,35 +546,36 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
                 }
             }
             const eventResponse = await dhisEngine.query(query);
-            if (eventResponse.events.events.length > 0) {
-                const lastEvent = eventResponse.events.events[0];
-                const updatePayload = {
-                    "event": lastEvent.event,
-                    "trackedEntityInstance": teId,
-                    "program": programId,
-                    "programStage": programStageId,
-                    "enrollment": icuId,
-                    "orgUnit": icuId,
-                    "completedDate": moment().format("YYYY-MM-DD"),
-                    "status": "COMPLETED"
-                };
-                const updateMutation = {
-                    resource: 'events',
-                    type: 'create',
-                    data: updatePayload
-                };
-                await dhisEngine.mutate(updateMutation);
+            for (let index = 0; index < eventResponse.events.events.length; index++) {
+                const lastEvent = eventResponse.events.events[index];
+                if (lastEvent.status !== "COMPLETED") {
+                    const updatePayload = {
+                        "event": lastEvent.event,
+                        "trackedEntityInstance": lastEvent.trackedEntityInstance,
+                        "program": lastEvent.program,
+                        "programStage": lastEvent.programStage,
+                        "enrollment": lastEvent.enrollment,
+                        "orgUnit": lastEvent.orgUnit,
+                        "completedDate": moment().format("YYYY-MM-DD"),
+                        "status": "COMPLETED"
+                    };
+                    const updateMutation = {
+                        resource: 'events',
+                        type: 'create',
+                        data: updatePayload
+                    };
+                    await dhisEngine.mutate(updateMutation);
+                }
             }
 
             const payload = {
                 "trackedEntityInstance": teId,
                 "program": programId,
                 "programStage": programStageId,
-                "enrollment": icuId,
                 "orgUnit": icuId,
                 "dataValues": dataValues,
                 "eventDate": moment().format("YYYY-MM-DD"),
-                "status": "ACTIVE"
+                "status": "COMPLETED"
             };
             const mutation = {
                 resource: 'events',
