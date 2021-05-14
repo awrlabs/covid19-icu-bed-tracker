@@ -8,9 +8,12 @@ import { addBedEvent, addBedPatientRelationship, createPatient } from '../state/
 import { useSelector, useDispatch } from 'react-redux';
 import {
     DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION,
-    PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS, PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP
+    PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS, PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP,
+    PATIENT_ATT_AGE,
+    PATIENT_ATT_DOB
 } from '../constants';
 import { getLastEvent } from './DataStore';
+import moment from 'moment';
 
 export default function RegisterPatientModal({ open, onClose, selectedBed, actionType, editable }) {
 
@@ -53,19 +56,34 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             _formState[k] = selectedBed[PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[k]];
         });
 
+        if (!_formState[PATIENT_ATT_AGE]) {
+            _formState[PATIENT_ATT_AGE] = "0";
+        }
+
         setFormState(_formState);
     }, [selectedBed, metaData]);
+
+
+    useEffect(() => {
+        if (formState[PATIENT_ATT_DOB]) {
+            let age = (moment().diff(formState[PATIENT_ATT_DOB], 'years')) + "";
+            if (age !== formState[PATIENT_ATT_AGE]) {
+                updateField(PATIENT_ATT_AGE, age);
+            }
+        }
+    }, [formState]);
 
     const updateField = (field, value) => {
         setFormState({
             ...formState,
             [field]: value
-        })
+        });
     }
 
     const getFormField = (field) => {
-        let fieldDisabled = !editable || PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[field.id] !== undefined;
-        if (field.type === "TEXT" || field.type === "INTEGER_ZERO_OR_POSITIVE" || field.type === "NUMBER" || field.type === "PHONE_NUMBER") {
+        let fieldDisabled = !editable || PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[field.id] !== undefined
+            || PATIENT_ATT_AGE === field.id;
+        if (field.type === "TEXT" || field.type === "INTEGER_ZERO_OR_POSITIVE" || field.type === "NUMBER" || field.type === "PHONE_NUMBER" || field.type === "DATE") {
             if (field.options) {
                 let selected = formState[field.id];
                 if (selected && !selected.value) {
@@ -88,6 +106,17 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     </SingleSelectField>
                 )
             }
+
+            let type = "text";
+            switch (field.type) {
+                case "PHONE_NUMBER":
+                    type = "number";
+                    break;
+                case "DATE":
+                    console.log("DATEEE", formState[field.id])
+                    type = "date";
+                    break;
+            }
             return (
                 <InputField
                     key={field.id}
@@ -95,7 +124,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     name={field.id}
                     onChange={(val) => updateField(field.id, val.value)}
                     value={formState[field.id]}
-                    type={(field.type === "TEXT" || field.type === "PHONE_NUMBER") ? "text" : "number"}
+                    type={type}
                     disabled={fieldDisabled} />
             )
         } else if (field.type == "BOOLEAN") {
@@ -108,6 +137,8 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     checked={formState[field.id]}
                     disabled={fieldDisabled} />
             )
+        } else {
+            console.log("FLD", field.type);
         }
     }
 
