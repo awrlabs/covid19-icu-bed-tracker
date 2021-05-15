@@ -7,10 +7,14 @@ import {
 import { addBedEvent, addBedPatientRelationship, createPatient } from '../state/apiActions';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-    DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_CLINICAL_PARAMETERS, PATIENT_FACILITY_UTLIZATION,
+    DATA_ELEMENT_TEI_ID, PATIENT_ATTRIBUTES, PATIENT_FACILITY_UTLIZATION,
     PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS, PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP,
+    PATIENT_CARMOBIDIES,
+    INDICATION_FOR_ADMISSION,
+    QSOFA,
     PATIENT_ATT_AGE,
-    PATIENT_ATT_DOB
+    PATIENT_ATT_DOB,
+    PATIENT_ATT_NAME
 } from '../constants';
 import { getLastEvent } from './DataStore';
 import moment from 'moment';
@@ -24,29 +28,35 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     const programStage = useSelector(state => state.app.ICUEventId);
     const activeICU = useSelector(state => state.app.activeICU);
 
+    const [incidentDate, setIncidentDate] = useState(moment().format("YYYY-MM-DD"));
+
     const bedDataValuesSet = PATIENT_ATTRIBUTES;
 
-    const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes;
+    const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes.filter(att=>{
+        att.id !== PATIENT_ATT_NAME;
+    });
 
     const lastBedEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
 
     useEffect(() => {
         let _formState = {};
-        for (var fieldId of bedDataValuesSet) {
-            const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
-            let lastValue = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id);
-            if (field.type === "TEXT") {
-                if (!editable && lastBedEvent) {
-                    _formState[field.id] = lastValue != undefined ? lastValue.value : "";
-                } else {
-                    _formState[field.id] = "";
-                }
-            } else if (field.type === "BOOLEAN") {
-                if (!editable && lastBedEvent) {
-                    // below condition looks stupid, but required
-                    _formState[field.id] = lastValue != undefined ? (lastValue.value === 'true' || lastValue.value === true) : false;
-                } else {
-                    _formState[field.id] = false;
+        if (lastBedEvent) {
+            for (var fieldId of bedDataValuesSet) {
+                const field = Object.values(metaData.dataElements).find(de => de.id === fieldId);
+                let lastValue = lastBedEvent.dataValues.find(dv => dv.dataElement === field.id);
+                if (field.type === "TEXT") {
+                    if (!editable && lastBedEvent) {
+                        _formState[field.id] = lastValue != undefined ? lastValue.value : "";
+                    } else {
+                        _formState[field.id] = "";
+                    }
+                } else if (field.type === "BOOLEAN") {
+                    if (!editable && lastBedEvent) {
+                        // below condition looks stupid, but required
+                        _formState[field.id] = lastValue != undefined ? (lastValue.value === 'true' || lastValue.value === true) : false;
+                    } else {
+                        _formState[field.id] = false;
+                    }
                 }
             }
         }
@@ -61,7 +71,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
         }
 
         setFormState(_formState);
-    }, [selectedBed, metaData]);
+    }, [selectedBed, metaData, lastBedEvent]);
 
 
     useEffect(() => {
@@ -113,7 +123,6 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     type = "number";
                     break;
                 case "DATE":
-                    console.log("DATEEE", formState[field.id])
                     type = "date";
                     break;
             }
@@ -171,8 +180,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     value
                 });
             } else if (PATIENT_FACILITY_UTLIZATION.indexOf(field) >= 0
-                || PATIENT_SPECIALIZATION_UTLIZATION.indexOf(field) >= 0
-                || PATIENT_CLINICAL_PARAMETERS.indexOf(field) >= 0) {
+                || PATIENT_SPECIALIZATION_UTLIZATION.indexOf(field) >= 0) {
                 admitEventDataValues.push({
                     dataElement: field,
                     value
@@ -187,9 +195,9 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
         // first save the patient and admit event
 
-        console.log("Savig", patientAttributes, admitEventDataValues);
+        console.log("Saving", patientAttributes, admitEventDataValues);
 
-        dispatch(createPatient(PATIENT_TEI_TYPE, activeICU.id, PROGRAM_PATIENTS, patientAttributes, admitEventDataValues, (patientId) => {
+        dispatch(createPatient(PATIENT_TEI_TYPE, activeICU.id, PROGRAM_PATIENTS, patientAttributes, admitEventDataValues, incidentDate, (patientId) => {
             // save the bed admit event
             bedEventDataValues.push({
                 dataElement: DATA_ELEMENT_TEI_ID,
@@ -197,9 +205,9 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             });
 
             if (actionType === "admit") {
-                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Admitted", bedEventDataValues));
+                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Admitted", bedEventDataValues, incidentDate));
             } else if (actionType === "reserve") {
-                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues));
+                dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Reserved", bedEventDataValues, incidentDate));
             }
 
             // adding relationship
@@ -229,6 +237,12 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 {modelTitle}
             </ModalTitle>
             <ModalContent>
+                <InputField
+                    label="Incident Date"
+                    name="incident_date"
+                    onChange={(val) => setIncidentDate(val.value)}
+                    value={incidentDate}
+                    type="date" />
                 <h4>Patient Information</h4>
                 {patientAttsSet.map((attrib) => getPatientFormFields(attrib))}
                 {bedDataValuesSet.map((attrib) => getDataValueFormField(attrib))}
@@ -239,8 +253,14 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 <h4>Specialists Utilization</h4>
                 {PATIENT_SPECIALIZATION_UTLIZATION.map((attrib) => getDataValueFormField(attrib))}
 
-                <h4>Clinical Parameters</h4>
-                {PATIENT_CLINICAL_PARAMETERS.map((attrib) => getDataValueFormField(attrib))}
+                <h4>Cormobidies</h4>
+                {PATIENT_CARMOBIDIES.map((attrib) => getDataValueFormField(attrib))}
+
+                <h4>Indication For Admission</h4>
+                {INDICATION_FOR_ADMISSION.map((attrib) => getDataValueFormField(attrib))}
+
+                <h4>qSOFA</h4>
+                {QSOFA.map((attrib) => getDataValueFormField(attrib))}
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>

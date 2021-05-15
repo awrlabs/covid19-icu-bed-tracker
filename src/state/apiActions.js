@@ -353,7 +353,7 @@ export function removeBed(icuId, enrollmentId, teiId) {
     }
 }
 
-export function addBedEvent(teId, programId, programStageId, icuId, eventType, additionalData = []) {
+export function addBedEvent(teId, programId, programStageId, icuId, eventType, additionalData = [], eventDate = moment().format("YYYY-MM-DD")) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             // first we complete last event
@@ -377,7 +377,7 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                     "programStage": programStageId,
                     "enrollment": icuId,
                     "orgUnit": icuId,
-                    "completedDate": moment().format("YYYY-MM-DD"),
+                    "completedDate": eventDate,
                     "status": "COMPLETED"
                 };
                 const updateMutation = {
@@ -399,7 +399,7 @@ export function addBedEvent(teId, programId, programStageId, icuId, eventType, a
                 "enrollment": icuId,
                 "orgUnit": icuId,
                 "dataValues": dataValues,
-                "eventDate": moment().format("YYYY-MM-DD"),
+                "eventDate": eventDate,
                 "status": "ACTIVE"
             };
             const mutation = {
@@ -452,7 +452,7 @@ export function getActiveICData(icuId) {
 }
 
 /*  PATIENT */
-export function completePatientEnrollment(patientId, icuId, outcome) {
+export function completePatientEnrollment(patientId, icuId, outcome, incidentDate) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             // send discharge event
@@ -479,7 +479,8 @@ export function completePatientEnrollment(patientId, icuId, outcome) {
                         enrollment: en.enrollment,
                         orgUnit: en.orgUnit,
                         trackedEntityInstance: en.trackedEntityInstance,
-                        program: en.program
+                        program: en.program,
+                        completedDate: incidentDate
                     };
                     const mutation = {
                         resource: 'enrollments/' + en.enrollment,
@@ -531,7 +532,7 @@ export function addBedPatientRelationship(bedId, patientId) {
     }
 }
 
-export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = []) {
+export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = [], incidentDate = moment().format("YYYY-MM-DD")) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             // first we complete last event
@@ -556,7 +557,7 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
                         "programStage": lastEvent.programStage,
                         "enrollment": lastEvent.enrollment,
                         "orgUnit": lastEvent.orgUnit,
-                        "completedDate": moment().format("YYYY-MM-DD"),
+                        "completedDate": incidentDate,
                         "status": "COMPLETED"
                     };
                     const updateMutation = {
@@ -574,7 +575,7 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
                 "programStage": programStageId,
                 "orgUnit": icuId,
                 "dataValues": dataValues,
-                "eventDate": moment().format("YYYY-MM-DD"),
+                "eventDate": incidentDate,
                 "status": "COMPLETED"
             };
             const mutation = {
@@ -593,7 +594,7 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
     }
 }
 
-export function createPatient(teTypeID, icuId, programId, attributes, admitDataValues, cb, error_cb) {
+export function createPatient(teTypeID, icuId, programId, attributes, admitDataValues, incidentDate, cb, error_cb) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             const payload = {
@@ -604,8 +605,8 @@ export function createPatient(teTypeID, icuId, programId, attributes, admitDataV
                     {
                         "orgUnit": icuId,
                         "program": programId,
-                        "enrollmentDate": moment().format("YYYY-MM-DD"),
-                        "incidentDate": moment().format("YYYY-MM-DD")
+                        "enrollmentDate": incidentDate,
+                        "incidentDate": incidentDate
                     }
                 ]
             };
@@ -617,7 +618,7 @@ export function createPatient(teTypeID, icuId, programId, attributes, admitDataV
             const response = await dhisEngine.mutate(mutation);
             const instanceId = response.response.importSummaries[0].reference;
 
-            await dispatch(addPatientEvent(instanceId, programId, PROGRAM_STAGE_PATIENT_ADMIT, icuId, admitDataValues));
+            await dispatch(addPatientEvent(instanceId, programId, PROGRAM_STAGE_PATIENT_ADMIT, icuId, admitDataValues, incidentDate));
             cb(instanceId);
         } catch (error) {
             dispatch(showNotification({

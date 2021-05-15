@@ -8,12 +8,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { DATA_ELEMENT_DISCHARGE_OUTCOME, DATA_ELEMENT_TEI_ID } from '../constants';
 import { getLastEvent } from './DataStore';
 import { addBedEvent, completePatientEnrollment } from '../state/apiActions';
+import moment from 'moment';
 
 export default function DischargeModal({ onClose, selectedBed }) {
     const metaData = useSelector(state => state.app.metaData);
     const [selected, setSelected] = useState();
     const programStage = useSelector(state => state.app.ICUEventId);
     const activeICU = useSelector(state => state.app.activeICU);
+
+    const [incidentDate, setIncidentDate] = useState(moment().format("YYYY-MM-DD"));
 
     const dispatch = useDispatch();
 
@@ -28,9 +31,9 @@ export default function DischargeModal({ onClose, selectedBed }) {
         let teiId = lastEvent.dataValues.find(dv => dv.dataElement === DATA_ELEMENT_TEI_ID);
         if (teiId) {
             // complete patient enrollment
-            dispatch(completePatientEnrollment(teiId.value, activeICU.id, selected.value));
+            dispatch(completePatientEnrollment(teiId.value, activeICU.id, selected.value, incidentDate));
         }
-        dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged"));
+        dispatch(addBedEvent(selectedBed.trackedEntityInstance, metaData.beds.id, programStage, activeICU.id, "Discharged", [], incidentDate));
         onClose();
     };
 
@@ -40,6 +43,12 @@ export default function DischargeModal({ onClose, selectedBed }) {
                 Discharge Patient
             </ModalTitle>
             <ModalContent>
+                <InputField
+                    label="Incident Date"
+                    name="incident_date"
+                    onChange={(val) => setIncidentDate(val.value)}
+                    value={incidentDate}
+                    type="date" />
                 <SingleSelectField
                     key={dischargeDataElement.id}
                     label={dischargeDataElement.formName}

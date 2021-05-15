@@ -5,6 +5,7 @@ export const ATT_BED_NUMBER = "tswabivShTy";
 
 export const PATIENT_ATT_AGE = "DPusBCqjcoL";
 export const PATIENT_ATT_DOB = "nvJtVaGKK4Q";
+export const PATIENT_ATT_NAME = "JfjfPhumT8b";
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
 
@@ -46,8 +47,8 @@ export const FACILITIES_ATTRIBUTES = [
 export const PATIENT_ATTRIBUTES = [
     "j1hbO7zzRgV",
     // "sK09QRLNyAA",
-    "malZQqUEzi9",
-    "qh9bc6jlauE"
+    // "malZQqUEzi9",
+    // "qh9bc6jlauE"
 ];
 
 export const PATIENT_FACILITY_UTLIZATION = [
@@ -56,10 +57,14 @@ export const PATIENT_FACILITY_UTLIZATION = [
     "hzAt2rwMjK0",
     "HTUc9fTdsT6",
     "ZHcVo1LCxp5",
-    "ehfZNVaQdPD",
+    "`ehfZNVaQdPD`",
     "iVVFlK8f7tZ",
     "rIUQBZQKd8v",
-    "jU6r9C0Abr2"
+    "jU6r9C0Abr2",
+    "K1oX3IiPDsM",
+    "iOjV78bsevn",
+    "JlGHCvJl9zO",
+    "cysMYi3BIQS"
 ];
 
 export const PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP = {
@@ -78,12 +83,43 @@ export const PATIENT_SPECIALIZATION_UTLIZATION = [
     "KqSlAtWn9ns"
 ];
 
-export const PATIENT_CLINICAL_PARAMETERS = [
-    "uUNYEFtsUXF",
-    "r7cuS2joKb1",
-    "WukZuWcVsOH",
-    "rCc89MRXZAF",
-    "rTqYuPKjaWj"
+// export const PATIENT_CLINICAL_PARAMETERS = [
+//     "uUNYEFtsUXF",
+//     "r7cuS2joKb1",
+//     "WukZuWcVsOH",
+//     "rCc89MRXZAF",
+//     "rTqYuPKjaWj",
+//     "OCTOkHE2HBW",
+//     "TlAvlaCsp5d"
+// ];
+
+export const PATIENT_CARMOBIDIES = [
+    "ShxRpx0QmHA",
+    "G5JR9iDgQrc",
+    "Z1Jk94M40pA",
+    "iNkGeJG3dWo",
+    "jFnzUZuptNX",
+    "Hh6dGnQt3pi",
+    "FB8Sgb1gFBL",
+    "IJniH6BQP2s"
 ];
+
+export const INDICATION_FOR_ADMISSION = [
+    "Z10sz29U8zC",
+    "xuB7YoQdXuq",
+    "Y7AsmvhPnGZ",
+    "U8wszALNpyv",
+    "Z1Jk94M40pA",
+    "yTrGr4DEAJ4",
+    "ZOZawMy7POP"
+]
+
+export const QSOFA = [
+    "tOCWzdjKHxQ",
+    "iYvIQIG10eX",
+    "GdHvxOdROmI"
+]
+
+
 
 
