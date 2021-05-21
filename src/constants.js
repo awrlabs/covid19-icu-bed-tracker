@@ -2,10 +2,10 @@ export const ATT_BED_TYPE = "XYNBoDZS0aV";
 export const ATT_COVID_TYPE = "Xt5tV6OFSEW";
 export const ATT_BED_NUMBER = "tswabivShTy";
 
-
 export const PATIENT_ATT_AGE = "DPusBCqjcoL";
 export const PATIENT_ATT_DOB = "nvJtVaGKK4Q";
-export const PATIENT_ATT_NAME = "JfjfPhumT8b";
+export const PATIENT_ATT_GENDER = "DDleOZ1LGAq";
+export const PATIENT_ATT_EXCLUDE = ["gvP9uZqEtM5", "eEtOfZW9pnO", "ihz1qXLws99"];
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
 
@@ -25,6 +25,8 @@ export const PROGRAM_STAGE_PATIENT_DISCHARGE = "NDHhoIZNcaJ";
 export const DATA_ELEMENT_TEI_ID = "lgieRGGJEKu";
 export const DATA_ELEMENT_DISCHARGE_OUTCOME = "EopYoUMpnID";
 
+export const DATA_ELEMENT_PATIENT_PREGNANCY = "OCTOkHE2HBW";
+
 export const RELATIONSHIP_BED_PATIENT = "BikX9ey3Qt8";
 
 export const EXPERTISE_ATTRIBUTES = [
@@ -35,18 +37,24 @@ export const EXPERTISE_ATTRIBUTES = [
     "Xar8cTc8XN0",
     "k7eXIuzzhat",
     "JZXI1GzSoYx",
+    "EZfIWTQTtbE"
 ];
 
 export const FACILITIES_ATTRIBUTES = [
     "Jio5MTDVFo4",
     "yvOZEiBS5cd",
     "CGp0lKLkSKY",
-    "YCILPvLTofG"
+    "YCILPvLTofG",
+    "W6nJfeaPenS",
+    "p9rce5ruM3x",
+    "qHkCcogp5yg",
+    "wC37D6htCKv",
+    "xf4PILg0BaZ"
 ];
 
 export const PATIENT_ATTRIBUTES = [
-    "j1hbO7zzRgV",
-    // "sK09QRLNyAA",
+    // "j1hbO7zzRgV",
+    //"sK09QRLNyAA",
     // "malZQqUEzi9",
     // "qh9bc6jlauE"
 ];
@@ -83,15 +91,15 @@ export const PATIENT_SPECIALIZATION_UTLIZATION = [
     "KqSlAtWn9ns"
 ];
 
-// export const PATIENT_CLINICAL_PARAMETERS = [
-//     "uUNYEFtsUXF",
-//     "r7cuS2joKb1",
-//     "WukZuWcVsOH",
-//     "rCc89MRXZAF",
-//     "rTqYuPKjaWj",
-//     "OCTOkHE2HBW",
-//     "TlAvlaCsp5d"
-// ];
+export const PATIENT_CLINICAL_PARAMETERS = [
+    // "uUNYEFtsUXF",
+    // "r7cuS2joKb1",
+    // "WukZuWcVsOH",
+    // "rCc89MRXZAF",
+    // "rTqYuPKjaWj",
+    "OCTOkHE2HBW",
+    "TlAvlaCsp5d"
+];
 
 export const PATIENT_CARMOBIDIES = [
     "ShxRpx0QmHA",
@@ -109,10 +117,13 @@ export const INDICATION_FOR_ADMISSION = [
     "xuB7YoQdXuq",
     "Y7AsmvhPnGZ",
     "U8wszALNpyv",
-    "Z1Jk94M40pA",
-    "yTrGr4DEAJ4",
-    "ZOZawMy7POP"
+    "mZOuN8QUZ8s",
+    "yTrGr4DEAJ4"
 ]
+
+export const INDICATION_FOR_ADMISSION_VARS = [
+    "ZOZawMy7POP"
+];
 
 export const QSOFA = [
     "tOCWzdjKHxQ",

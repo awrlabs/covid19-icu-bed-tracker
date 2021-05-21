@@ -267,11 +267,14 @@ function ViewICUBeds() {
         return <p>Please select an organization unit</p>
     }
 
-    const getAttributeText = (bed, attribId, key) => {
-        if (bed.attributes.find(a => a.attribute === attribId).value === "true") {
-            return (
-                <p key={key}>{metaData.beds.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
-            )
+    const getAttributeText = (beds, attribId, key) => {
+        for (let bed of beds) {
+            let bedAtt = bed.attributes.find(a => a.attribute === attribId);
+            if (bedAtt && (bedAtt.value === "true" || bedAtt.value === "Yes")) {
+                return (
+                    <p key={key}>{metaData.beds.trackedEntityType.trackedEntityTypeAttributes.find(a => a.id === attribId).formName}</p>
+                )
+            }
         }
         return "";
     }
@@ -288,13 +291,13 @@ function ViewICUBeds() {
                 {activeICU.beds.length > 0 &&
                     <div className="contact">
                         <p><b>Facilities</b></p>
-                        {FACILITIES_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
+                        {FACILITIES_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds, attrib, key))}
                     </div>
                 }
                 {activeICU.beds.length > 0 &&
                     <div className="contact">
                         <p><b>Expertise</b></p>
-                        {EXPERTISE_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds[0], attrib, key))}
+                        {EXPERTISE_ATTRIBUTES.map((attrib, key) => getAttributeText(activeICU.beds, attrib, key))}
                     </div>
                 }
                 <div className="contact">
@@ -315,7 +318,9 @@ function ViewICUBeds() {
                             {!activeICU.beds.length &&
                                 <p>No beds currently added</p>
                             }
-                            {activeICU.beds.map((bed, key) => (
+                            {activeICU.beds.slice().sort((a, b) => {
+                                return parseInt(a[[ATT_BED_NUMBER]]) - parseInt(b[[ATT_BED_NUMBER]]);
+                            }).map((bed, key) => (
 
                                 <ICUBed
                                     key={key}
@@ -419,7 +424,9 @@ function ViewConfigureBeds({ onBack }) {
                     </TableHead>
                     {activeICU &&
                         <TableBody>
-                            {activeICU.beds.map((bed, key) => (
+                            {activeICU.beds.slice().sort((a, b) => {
+                                return parseInt(a[[ATT_BED_NUMBER]]) - parseInt(b[[ATT_BED_NUMBER]]);
+                            }).map((bed, key) => (
                                 <TableRow key={key}>
                                     <TableCell>{bed[ATT_BED_NUMBER]}</TableCell>
                                     <TableCell>{bed[ATT_BED_TYPE]}</TableCell>

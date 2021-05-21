@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Modal, ModalTitle, ModalActions, ModalContent, ButtonStrip, Button,
     InputField, SingleSelect, RadioGroup, Radio, RadioGroupField, SingleSelectOption, SingleSelectField,
@@ -20,7 +20,7 @@ export default function DischargeModal({ onClose, selectedBed }) {
 
     const dispatch = useDispatch();
 
-    const dischargeDataElement = Object.values(metaData.dataElements).find(de => de.id === DATA_ELEMENT_DISCHARGE_OUTCOME);
+    const dischargeDataElement = useMemo(() => Object.values(metaData.dataElements).find(de => de.id === DATA_ELEMENT_DISCHARGE_OUTCOME), [metaData]);
 
     const updateField = (value) => {
         setSelected(value.selected);

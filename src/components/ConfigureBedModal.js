@@ -8,28 +8,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import * as moment from 'moment';
 import { useDataMutation, useDataEngine } from '@dhis2/app-runtime';
 import { createBed, updateBed } from '../state/apiActions';
+import { FACILITIES_ATTRIBUTES, EXPERTISE_ATTRIBUTES } from '../constants';
 
 const booleanSelections = [
     { label: "No", value: 'false' },
     { label: "Yes", value: 'true' },
 ];
 
-const experiseAttrbutes = [
-    "v5eNzdQsLox",
-    "eBlbs7BzVfX",
-    "JJ2DQSnlhfR",
-    "m64bCKnUD8L",
-    "Xar8cTc8XN0",
-    "k7eXIuzzhat",
-    "JZXI1GzSoYx",
-]
-
-const facilitiesAttributes = [
-    "Jio5MTDVFo4",
-    "yvOZEiBS5cd",
-    "CGp0lKLkSKY",
-    "YCILPvLTofG"
-]
 
 const infoAttributes = [
     "tswabivShTy",
@@ -200,12 +185,12 @@ export default function ConfigureBedModal({ open, onClose, selectedBed, editable
                         )}
 
                         <h4>Facilities</h4>
-                        {facilitiesAttributes.map((attrib, key) =>
+                        {FACILITIES_ATTRIBUTES.map((attrib, key) =>
                             getAttributeInput(attrib, key)
                         )}
 
                         <h4>Expertise</h4>
-                        {experiseAttrbutes.map((attrib, key) =>
+                        {EXPERTISE_ATTRIBUTES.map((attrib, key) =>
                             getAttributeInput(attrib, key)
                         )}
                     </div>

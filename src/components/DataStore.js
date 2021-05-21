@@ -247,7 +247,10 @@ export default function DataStore({ children }) {
             Promise.all([
                 asyncInsert(
                     bedsCollection, data.beds.trackedEntityInstances.filter((te) => {
-                        return te.enrollments.length > 0;
+                        if (te.enrollments.length > 1) {
+                            console.warn("Found a bed with multiple enrollments");
+                        }
+                        return te.enrollments.length === 1 && te.enrollments[0].status === "ACTIVE";
                     }).map(te => {
                         te.attributes && te.attributes.forEach(at => {
                             te[at.attribute] = at.value;

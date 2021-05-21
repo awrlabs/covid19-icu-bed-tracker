@@ -121,7 +121,7 @@ export function getMetaData() {
                 programBeds: {
                     resource: 'programs/C1wTfmmMQUn',
                     params: {
-                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]]"
+                        fields: "id,name,userGroupAccesses,trackedEntityType[id, displayName, userGroupAccesses, trackedEntityTypeAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]],programTrackedEntityAttributes[trackedEntityAttribute[id, displayName, formName, valueType, optionSet[options[displayName, id, code]]]]"
                     },
                 },
                 programPatients: {
@@ -456,46 +456,56 @@ export function completePatientEnrollment(patientId, icuId, outcome, incidentDat
     return async (dispatch, getState, dhisEngine) => {
         try {
             // send discharge event
+            // todo await didn't work
             dispatch(addPatientEvent(patientId, PROGRAM_PATIENTS, PROGRAM_STAGE_PATIENT_DISCHARGE, icuId, [{
                 dataElement: DATA_ELEMENT_DISCHARGE_OUTCOME,
                 value: outcome
-            }]));
-
-            const query = {
-                enrollments: {
-                    resource: 'enrollments',
-                    params: {
-                        trackedEntityInstance: patientId,
-                        program: PROGRAM_PATIENTS,
-                        ouMode: "ACCESSIBLE"
+            }], incidentDate, async () => {
+                console.log("Completing the enrollment");
+                try {
+                    const query = {
+                        enrollments: {
+                            resource: 'enrollments',
+                            params: {
+                                trackedEntityInstance: patientId,
+                                program: PROGRAM_PATIENTS,
+                                ouMode: "ACCESSIBLE"
+                            }
+                        }
                     }
+                    const enrollmentResponse = await dhisEngine.query(query);
+                    if (enrollmentResponse.enrollments) {
+                        for (let en of enrollmentResponse.enrollments.enrollments) {
+                            const payload = {
+                                status: "COMPLETED",
+                                enrollment: en.enrollment,
+                                orgUnit: en.orgUnit,
+                                trackedEntityInstance: en.trackedEntityInstance,
+                                program: en.program,
+                                completedDate: incidentDate
+                            };
+                            const mutation = {
+                                resource: 'enrollments/' + en.enrollment,
+                                type: 'update',
+                                data: payload
+                            };
+                            const response = await dhisEngine.mutate(mutation);
+                        }
+                    }
+                } catch (error) {
+                    dispatch(showNotification({
+                        message: 'error in completing patient enrollment',
+                        type: 'error'
+                    }))
+                    console.error("Error in completing patient enrollment:", error)
                 }
-            }
-            const enrollmentResponse = await dhisEngine.query(query);
-            if (enrollmentResponse.enrollments) {
-                for (let en of enrollmentResponse.enrollments.enrollments) {
-                    const payload = {
-                        status: "COMPLETED",
-                        enrollment: en.enrollment,
-                        orgUnit: en.orgUnit,
-                        trackedEntityInstance: en.trackedEntityInstance,
-                        program: en.program,
-                        completedDate: incidentDate
-                    };
-                    const mutation = {
-                        resource: 'enrollments/' + en.enrollment,
-                        type: 'update',
-                        data: payload
-                    };
-                    const response = await dhisEngine.mutate(mutation);
-                }
-            }
+            }));
         } catch (error) {
             dispatch(showNotification({
-                message: 'error in completing patient enrollment',
+                message: 'error creating the discharge event',
                 type: 'error'
             }))
-            console.error("Error in completing patient enrollment:", error)
+            console.error("Error in creating the discharge event:", error)
         }
     }
 }
@@ -532,7 +542,7 @@ export function addBedPatientRelationship(bedId, patientId) {
     }
 }
 
-export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = [], incidentDate = moment().format("YYYY-MM-DD")) {
+export function addPatientEvent(teId, programId, programStageId, icuId, dataValues = [], incidentDate = moment().format("YYYY-MM-DD"), cb) {
     return async (dispatch, getState, dhisEngine) => {
         try {
             // first we complete last event
@@ -584,6 +594,9 @@ export function addPatientEvent(teId, programId, programStageId, icuId, dataValu
                 data: payload
             };
             const response = await dhisEngine.mutate(mutation);
+            if (cb) {
+                cb();
+            }
         } catch (error) {
             dispatch(showNotification({
                 message: 'error in adding patient event',

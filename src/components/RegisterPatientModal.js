@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Modal, ModalTitle, ModalActions, ModalContent, ButtonStrip, Button,
     InputField, SingleSelect, RadioGroup, Radio, RadioGroupField, SingleSelectOption, SingleSelectField,
@@ -11,10 +11,14 @@ import {
     PATIENT_SPECIALIZATION_UTLIZATION, PATIENT_TEI_TYPE, PROGRAM_PATIENTS, PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP,
     PATIENT_CARMOBIDIES,
     INDICATION_FOR_ADMISSION,
+    INDICATION_FOR_ADMISSION_VARS,
+    PATIENT_CLINICAL_PARAMETERS,
     QSOFA,
     PATIENT_ATT_AGE,
     PATIENT_ATT_DOB,
-    PATIENT_ATT_NAME
+    PATIENT_ATT_EXCLUDE,
+    PATIENT_ATT_GENDER,
+    DATA_ELEMENT_PATIENT_PREGNANCY
 } from '../constants';
 import { getLastEvent } from './DataStore';
 import moment from 'moment';
@@ -32,11 +36,11 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
 
     const bedDataValuesSet = PATIENT_ATTRIBUTES;
 
-    const patientAttsSet = metaData.patients.trackedEntityType.trackedEntityTypeAttributes.filter(att=>{
-        att.id !== PATIENT_ATT_NAME;
-    });
+    const patientAttsSet = useMemo(() => metaData.patients.trackedEntityType.trackedEntityTypeAttributes.filter(att => {
+        return PATIENT_ATT_EXCLUDE.indexOf(att.id) === -1;
+    }), [metaData]);
 
-    const lastBedEvent = selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance);
+    const lastBedEvent = useMemo(() => selectedBed.lastEvent || getLastEvent(selectedBed.trackedEntityInstance), [selectedBed]);
 
     useEffect(() => {
         let _formState = {};
@@ -93,6 +97,12 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
     const getFormField = (field) => {
         let fieldDisabled = !editable || PATIENT_FACILITY_UTLIZATION_BED_ATT_MAP[field.id] !== undefined
             || PATIENT_ATT_AGE === field.id;
+
+        if (formState[PATIENT_ATT_GENDER] && formState[PATIENT_ATT_GENDER].value === "Male" && field.id === DATA_ELEMENT_PATIENT_PREGNANCY) {
+            console.log("Retuning null", field);
+            return null;
+        }
+
         if (field.type === "TEXT" || field.type === "INTEGER_ZERO_OR_POSITIVE" || field.type === "NUMBER" || field.type === "PHONE_NUMBER" || field.type === "DATE") {
             if (field.options) {
                 let selected = formState[field.id];
@@ -118,14 +128,19 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             }
 
             let type = "text";
+
             switch (field.type) {
                 case "PHONE_NUMBER":
+                    type = "number";
+                    break;
+                case "INTEGER_ZERO_OR_POSITIVE":
                     type = "number";
                     break;
                 case "DATE":
                     type = "date";
                     break;
             }
+
             return (
                 <InputField
                     key={field.id}
@@ -180,7 +195,12 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                     value
                 });
             } else if (PATIENT_FACILITY_UTLIZATION.indexOf(field) >= 0
-                || PATIENT_SPECIALIZATION_UTLIZATION.indexOf(field) >= 0) {
+                || PATIENT_SPECIALIZATION_UTLIZATION.indexOf(field) >= 0
+                || PATIENT_CLINICAL_PARAMETERS.indexOf(field) >= 0
+                || PATIENT_CARMOBIDIES.indexOf(field) >= 0
+                || INDICATION_FOR_ADMISSION.indexOf(field) >= 0
+                || INDICATION_FOR_ADMISSION_VARS.indexOf(field) >= 0
+                || QSOFA.indexOf(field) >= 0) {
                 admitEventDataValues.push({
                     dataElement: field,
                     value
@@ -246,21 +266,31 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
                 <h4>Patient Information</h4>
                 {patientAttsSet.map((attrib) => getPatientFormFields(attrib))}
                 {bedDataValuesSet.map((attrib) => getDataValueFormField(attrib))}
-
-                <h4>Facility Utilization</h4>
-                {PATIENT_FACILITY_UTLIZATION.map((attrib) => getDataValueFormField(attrib))}
+                {PATIENT_CLINICAL_PARAMETERS.map((attrib) => getDataValueFormField(attrib))}
+                {/* <h4>Facility Utilization</h4>
+                {PATIENT_FACILITY_UTLIZATION.map((attrib) => getDataValueFormField(attrib))} 
+        
+                
 
                 <h4>Specialists Utilization</h4>
-                {PATIENT_SPECIALIZATION_UTLIZATION.map((attrib) => getDataValueFormField(attrib))}
+                {PATIENT_SPECIALIZATION_UTLIZATION.map((attrib) => getDataValueFormField(attrib))} */}
 
-                <h4>Cormobidies</h4>
+                <h4>Comorbidities</h4>
                 {PATIENT_CARMOBIDIES.map((attrib) => getDataValueFormField(attrib))}
+
 
                 <h4>Indication For Admission</h4>
                 {INDICATION_FOR_ADMISSION.map((attrib) => getDataValueFormField(attrib))}
 
-                <h4>qSOFA</h4>
-                {QSOFA.map((attrib) => getDataValueFormField(attrib))}
+                {
+                    actionType !== "reserve" && (
+                        <>
+                            {INDICATION_FOR_ADMISSION_VARS.map((attrib) => getDataValueFormField(attrib))}
+                            <h4>qSOFA</h4>
+                            {QSOFA.map((attrib) => getDataValueFormField(attrib))}
+                        </>
+                    )
+                }
             </ModalContent>
             <ModalActions>
                 <ButtonStrip end>
