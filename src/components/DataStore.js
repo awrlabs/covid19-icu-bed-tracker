@@ -85,7 +85,7 @@ export function getICUsForParent(parentId, filters, expertiseFilters = [], dista
         resolve(
             icusCollection.find({ parents: { $eq: parentId } }).map(icu => {
                 return { ...icu, ...queryForICU(icu.id, filters, expertiseFilters, distanceOrigin) }
-            }).filter(icu => icu.available > 0)
+            }).filter(icu => icu.total > 0)
         );
     });
 }
@@ -200,8 +200,10 @@ export default function DataStore({ children }) {
             params: {
                 ouMode: "ACCESSIBLE",
                 fields: "trackedEntityInstance,attributes[attribute,value],orgUnit,enrollments",
-                trackedEntityType: BED_TEI_TYPE,
-                paging: "false"
+                //trackedEntityType: BED_TEI_TYPE,
+                paging: "false",
+                programStatus: "ACTIVE",
+                program: PROGRAM
             },
         },
         bedEvents: {

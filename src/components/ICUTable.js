@@ -27,11 +27,23 @@ function sortData(field, data, state) {
         return comparison
     }
     let result = data.slice()
+    console.log("Sorting...")
     result = result.sort(compare)
+    console.log("Sorted!")
     setLocationData(result)
     setSortedBy(field)
     setSortOrder(sortOrder * -1)
 }
+
+function getArrow(name, sortedBy, sortOrder) {
+    if (sortedBy !== name) {
+        return "";
+    } else if (sortOrder === 1) {
+        return "⬇️";
+    } else {
+        return "⬆️";
+    }
+};
 
 export default function ICUTable({ data, onSelectICU }) {
     const [locationData, setLocationData] = useState([])
@@ -54,41 +66,42 @@ export default function ICUTable({ data, onSelectICU }) {
 
     if (!data) { return <div></div> }
 
+
+
     return (
         <Table>
             <TableHead>
                 <TableRow>
                     <TableCellHead className="name-column" >
-                        <DropdownButton
+                        <Button
                             primary={sortedBy === 'name'}
                             onClick={() => { sortData('name', locationData, stateData) }}
                         >
-                            ICU
-                        </DropdownButton>
+                            ICU {getArrow('name', sortedBy, sortOrder)}
+                        </Button>
                     </TableCellHead>
                     <TableCellHead >
-                        <DropdownButton
+                        <Button
                             primary={sortedBy === 'distance'}
                             onClick={() => { sortData('distance', locationData, stateData) }}
                         >
-                            Distance
-                        </DropdownButton>
+                            Distance {getArrow('distance', sortedBy, sortOrder)}
+                        </Button>
                     </TableCellHead>
                     <TableCellHead >
-                        <DropdownButton
+                        <Button
                             primary={sortedBy === 'total'}
-                            onClick={() => { sortData('total', locationData, stateData) }}
-                        >
-                            TotalBeds
-                        </DropdownButton>
+                            onClick={() => { sortData('total', locationData, stateData) }}>
+                            TotalBeds {getArrow('total', sortedBy, sortOrder)}
+                        </Button>
                     </TableCellHead>
                     <TableCellHead >
-                        <DropdownButton
+                        <Button
                             primary={sortedBy === 'available'}
                             onClick={() => { sortData('available', locationData, stateData) }}
                         >
-                            AvailableBeds
-                        </DropdownButton>
+                            AvailableBeds {getArrow('available', sortedBy, sortOrder)}
+                        </Button>
                     </TableCellHead>
                 </TableRow>
             </TableHead>

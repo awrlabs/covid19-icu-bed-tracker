@@ -44,7 +44,7 @@ export default function DischargeModal({ onClose, selectedBed }) {
             </ModalTitle>
             <ModalContent>
                 <InputField
-                    label="Incident Date"
+                    label="Date of Discharge"
                     name="incident_date"
                     onChange={(val) => setIncidentDate(val.value)}
                     value={incidentDate}

@@ -258,7 +258,7 @@ export default function RegisterPatientModal({ open, onClose, selectedBed, actio
             </ModalTitle>
             <ModalContent>
                 <InputField
-                    label="Incident Date"
+                    label="Admission Date"
                     name="incident_date"
                     onChange={(val) => setIncidentDate(val.value)}
                     value={incidentDate}
