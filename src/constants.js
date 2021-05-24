@@ -5,6 +5,7 @@ export const ATT_BED_NUMBER = "tswabivShTy";
 export const PATIENT_ATT_AGE = "DPusBCqjcoL";
 export const PATIENT_ATT_DOB = "nvJtVaGKK4Q";
 export const PATIENT_ATT_GENDER = "DDleOZ1LGAq";
+export const PATIENT_ATT_BHT = "CvY8IeQ3dNi";
 export const PATIENT_ATT_EXCLUDE = ["gvP9uZqEtM5", "eEtOfZW9pnO", "ihz1qXLws99"];
 
 export const ICU_EVENT_ID = "MtYPOv0wqCg";
@@ -106,6 +107,7 @@ export const PATIENT_CARMOBIDIES = [
     "G5JR9iDgQrc",
     "Z1Jk94M40pA",
     "iNkGeJG3dWo",
+    "Ij4LFYfISzf",
     "jFnzUZuptNX",
     "Hh6dGnQt3pi",
     "FB8Sgb1gFBL",

@@ -334,6 +334,7 @@ function ViewICUBeds() {
                                     onStatusChange={() => onStatusChange(bed)}
                                     hasEventPerm={eventPerm}
                                     hasEditPerm={hasPerm(ACTIONS.CONFIG_ICU, activeUser, metaData.beds.programAccess, metaData.beds.trackedEntityType.access, activeICU.id)}
+                                    bedId={bed.trackedEntityInstance}
                                 />
                             ))}
                         </div>

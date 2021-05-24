@@ -200,10 +200,10 @@ export default function DataStore({ children }) {
             params: {
                 ouMode: "ACCESSIBLE",
                 fields: "trackedEntityInstance,attributes[attribute,value],orgUnit,enrollments",
-                //trackedEntityType: BED_TEI_TYPE,
+                trackedEntityType: BED_TEI_TYPE,
                 paging: "false",
-                programStatus: "ACTIVE",
-                program: PROGRAM
+                //programStatus: "ACTIVE",
+                //program: PROGRAM
             },
         },
         bedEvents: {
