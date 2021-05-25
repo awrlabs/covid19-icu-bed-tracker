@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CircularLoader } from '@dhis2/ui-core';
 import { useDispatch, useSelector } from 'react-redux';
-import { DataQuery, useDataQuery } from '@dhis2/app-runtime'
+import { DataQuery, useDataQuery, useConfig } from '@dhis2/app-runtime'
 import { Treebeard } from 'react-treebeard';
 import { setActiveOrgUnit, updateFilteredICUList, setActiveICU } from '../state/appState';
 import { ICU_ORG_UNIT_GROUP } from '../constants';
@@ -17,10 +17,12 @@ const query = {
     }
 }
 
-
 export default function OrgUnits() {
 
-    const { loading, error, data, refetch } = useDataQuery(query);
+    const { loading, error, data, refetch } = useDataQuery(query, {
+        lazy: true
+    });
+
     const [orgRoot, setOrgRoot] = useState(null);
     const [cursor, setCursor] = useState(false);
     const dispatch = useDispatch();
@@ -28,14 +30,27 @@ export default function OrgUnits() {
         typeFilters: {},
         specialityFilters: []
     });
+
     const activeUser = useSelector(state => state.app.activeUser);
 
     useEffect(() => {
-        if (data) {
+        if (data && activeUser) {
             const root = data.organisationUnits.organisationUnits;
+            window.localStorage.setItem(activeUser.id, window.JSON.stringify(root));
             setOrgRoot(root);
         }
-    }, [loading]);
+    }, [loading, activeUser]);
+
+    useEffect(() => {
+        if (activeUser) {
+            let existingRoot = window.localStorage.getItem(activeUser.id);
+            if (existingRoot) {
+                setOrgRoot(window.JSON.parse(existingRoot));
+            } else {
+                refetch();
+            }
+        }
+    }, [activeUser])
 
     const onToggle = (node, toggled) => {
         if (cursor) {
